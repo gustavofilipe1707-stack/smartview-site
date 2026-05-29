@@ -196,7 +196,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#071428; font-f
   background:#071428;
 }
 .slide-photo  { width:100%;height:100%;object-fit:cover;display:block; }
-.slide-video-bg { position:absolute;top:0;left:0;width:100%;height:100%;display:none;object-fit:cover;filter:blur(28px);transform:scale(1.18);opacity:0.75;z-index:0; }
+.slide-video-bg { display:none !important; }
 .slide-video  { position:absolute;top:0;left:0;width:100%;height:100%;background:transparent;display:none;object-fit:cover;z-index:1; }
 .photo-grad  { position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0) 60%,rgba(0,0,0,0.5) 100%); }
 
@@ -533,8 +533,9 @@ function init(){
 function fitName(el){ var steps=[7,6,5,4.2]; for(var i=0;i<steps.length;i++){ el.style.fontSize=steps[i]+'vw'; if(el.scrollHeight<=el.clientHeight+4) break; } }
 
 function fill(p,s){
-  if(s.video){ p.video.src=s.video; p.video.style.display='block'; p.videoBg.src=s.video; p.videoBg.style.display='block'; p.photo.style.display='none'; p.video.play&&p.video.play().catch(function(){}); p.videoBg.play&&p.videoBg.play().catch(function(){}); }
-  else { p.video.pause&&p.video.pause(); p.video.src=''; p.video.style.display='none'; p.videoBg.pause&&p.videoBg.pause(); p.videoBg.src=''; p.videoBg.style.display='none'; if(s.bg){ p.photo.src=s.bg; p.photo.style.display='block'; } else { p.photo.style.display='none'; } }
+  p.video.pause&&p.video.pause(); p.video.src='';
+  if(s.video){ p.video.src=s.video; p.video.style.display='block'; p.photo.style.display='none'; p.video.play&&p.video.play().catch(function(){}); }
+  else { p.video.style.display='none'; if(s.bg){ p.photo.src=s.bg; p.photo.style.display='block'; } else { p.photo.style.display='none'; } }
   if(s.logo){ p.logo.src=s.logo; p.logo.style.display='block'; } else { p.logo.style.display='none'; }
   p.cat.textContent=CATS[s.category]||CATS['outros'];
   p.name.textContent=s.name; fitName(p.name);
@@ -571,7 +572,7 @@ function nextSlide(){
     updateDots(current);
     updateMeta(stores[current]);
     startPB();
-    setTimeout(function(){ isTransitioning=false; },700);
+    setTimeout(function(){ cur.video.pause&&cur.video.pause(); isTransitioning=false; },700);
   }); });
 }
 function scheduleNext(){
