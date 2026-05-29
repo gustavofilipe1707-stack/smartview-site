@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SmartView — Vitrine</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:100%; height:100%; overflow:hidden; background:#0e0a08; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif; color:#fff; cursor:none; }
+
+/* Layout flexbox: header → slides → footer — sem position absolute */
+#vp { width:100vw; height:100vh; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+
+/* Loading (absolute sobre tudo) */
+#loading { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0e0a08;gap:3vh;z-index:20; }
+.spinner { width:8vw;height:8vw;border:1vw solid rgba(255,255,255,0.1);border-top-color:#fff;border-radius:50%;animation:spin 0.9s linear infinite; }
+@keyframes spin{to{transform:rotate(360deg);}}
+#loading p { font-size:3.5vw;color:rgba(255,255,255,0.35); }
+
+/* Cabeçalho — flex-shrink:0 */
+.sv-header {
+  flex-shrink:0;
+  height:13vh;
+  background:rgba(14,10,8,0.96);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 5vw;
+  position:relative;z-index:5;
+}
+.sv-logo-name { font-size:5.5vw;font-weight:900;line-height:1; }
+.sv-logo-name span { color:#4ade80; }
+.sv-logo-sub  { font-size:2.5vw;color:rgba(255,255,255,0.35);margin-top:0.3vh; }
+.header-right { display:flex;flex-direction:column;align-items:flex-end;gap:0.3vh; }
+#clock      { font-size:6vw;font-weight:900;font-variant-numeric:tabular-nums;line-height:1; }
+#clock-date { font-size:2.3vw;color:rgba(255,255,255,0.35); }
+#weather    { display:none;align-items:center;gap:1.5vw;font-size:3vw;margin-top:0.3vh; }
+#w-temp     { font-weight:700; }
+#w-hum      { color:rgba(255,255,255,0.5); }
+
+/* Rodapé — flex-shrink:0 */
+.sv-footer {
+  flex-shrink:0;
+  background:rgba(14,10,8,0.98);
+  border-top:1px solid rgba(255,255,255,0.07);
+  padding:2.5vw 5vw 3vw;
+  position:relative;z-index:5;
+}
+#store-meta { font-size:3vw;color:rgba(255,255,255,0.5);line-height:1.9; }
+.footer-nav { display:flex;align-items:center;gap:2vw;margin-top:2vw; }
+#dots { display:flex;gap:1.5vw;align-items:center; }
+.dot { width:2.5vw;height:1.2vw;border-radius:0.6vw;background:rgba(255,255,255,0.2);transition:width 0.3s,background 0.3s; }
+.dot.active { background:#fff;width:5.5vw; }
+.progress-track { flex:1;height:1.2vw;background:rgba(255,255,255,0.1);border-radius:0.6vw;overflow:hidden; }
+#progress-bar { height:100%;width:0%;background:rgba(255,255,255,0.6);border-radius:0.6vw;transition:width 0.3s linear; }
+
+/* ── Área deslizante — ocupa tudo que sobrou ── */
+.slides-viewport {
+  flex:1; min-height:0;
+  position:relative;
+  overflow:hidden;
+}
+.slide-panel {
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  display:flex;flex-direction:column;
+  will-change:transform;
+}
+.slide-panel.pos-center { transform:translateY(0);    transition:transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+.slide-panel.pos-below  { transform:translateY(100%);  transition:none; }
+.slide-panel.pos-above  { transform:translateY(-100%); transition:transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+
+/* ── Foto da loja ── */
+.photo-wrap {
+  position:relative;
+  height:52%;
+  flex-shrink:0;
+  overflow:hidden;
+  background:#111;
+}
+.slide-photo { width:100%;height:100%;object-fit:cover;display:block; }
+.photo-grad  { position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0) 40%,rgba(0,0,0,0.65) 70%,rgba(0,0,0,0.92) 100%); }
+
+.cat-badge {
+  position:absolute;top:3.5vw;left:4vw;z-index:2;
+  background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);
+  border-radius:12vw;padding:1.5vw 3.5vw;
+  font-size:3.3vw;font-weight:700;letter-spacing:0.05vw;
+}
+.store-logo-thumb {
+  position:absolute;top:3vw;right:4vw;z-index:2;
+  width:17vw;height:17vw;border-radius:3vw;object-fit:cover;
+  border:0.6vw solid rgba(255,255,255,0.35);
+  box-shadow:0 4px 16px rgba(0,0,0,0.7);
+  display:none;
+}
+.photo-bottom { position:absolute;bottom:0;left:0;right:0;z-index:2;padding:3vw 5vw 5vw; }
+.store-name { font-size:7vw;font-weight:900;line-height:1.1;text-shadow:0 2px 12px rgba(0,0,0,0.9);margin-bottom:1.5vw;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; }
+.store-desc { font-size:3.3vw;color:rgba(255,255,255,0.72);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; }
+
+/* ── Seção QR ── */
+.qr-wrap {
+  flex:1;min-height:0;
+  background:#0e0a08;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2vh 8vw;
+  gap:1.5vh;
+}
+.qr-perfil-lbl { font-size:2.6vw;font-weight:700;letter-spacing:0.4vw;text-transform:uppercase;color:rgba(255,255,255,0.3); }
+.qr-cta        { font-size:5vw;font-weight:800;color:#fff;text-align:center;line-height:1.3; }
+.qr-img-box    { background:#fff;border-radius:3vw;padding:2vw;box-shadow:0 6px 30px rgba(0,0,0,0.7); }
+.store-qr      { display:block;width:36vw;height:36vw; }
+.qr-hint       { font-size:3vw;color:rgba(255,255,255,0.28);text-align:center; }
+
+/* Promo/cupom dentro do QR */
+.store-promo   { display:none;width:100%;border-radius:2.5vw;padding:2vw 3.5vw;background:rgba(252,211,77,0.1);border:1.5px solid rgba(252,211,77,0.35);text-align:center; }
+.promo-title   { font-size:4.5vw;font-weight:900;color:#fcd34d; }
+.promo-desc    { font-size:3vw;color:rgba(255,255,255,0.6);margin-top:1vw; }
+.store-coupon  { display:none;width:100%;border-radius:2.5vw;padding:2vw 3.5vw;background:#fbbf24;color:#1a1100;font-size:4vw;font-weight:800;text-align:center;animation:blink 2s ease-in-out infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* ══ COPA (sobre tudo) ══ */
+@keyframes copaFade    { from{opacity:0;} to{opacity:1;} }
+@keyframes copaFadeOut { from{opacity:1;} to{opacity:0;} }
+#copa-view {
+  display:none;position:absolute;inset:0;z-index:15;
+  flex-direction:column;background:#005c20;overflow:hidden;
+}
+#copa-view.show   { display:flex;animation:copaFade 0.5s ease both; }
+#copa-view.fading { animation:copaFadeOut 0.4s ease forwards;pointer-events:none; }
+#copa-view-b {
+  display:none;position:absolute;inset:0;z-index:14;
+  flex-direction:column;background:#003d16;overflow:hidden;
+}
+#copa-view-b.show { display:flex; }
+
+/* Copa A */
+.copa-top { flex-shrink:0;background:rgba(0,0,0,0.4);border-bottom:2px solid rgba(255,215,0,0.35);padding:4vw 6vw;display:flex;align-items:center;gap:4vw; }
+.copa-flag { font-size:12vw;line-height:1; }
+.copa-title-block .copa-lbl  { font-size:2.8vw;font-weight:700;color:rgba(255,215,0,0.8);text-transform:uppercase;letter-spacing:0.2vw; }
+.copa-title-block .copa-main { font-size:7.5vw;font-weight:900;color:#fff;line-height:1; }
+.copa-title-block .copa-host { font-size:2.8vw;color:rgba(255,255,255,0.55);margin-top:0.8vw; }
+.copa-trophy { font-size:12vw;line-height:1; }
+.copa-body { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4vw 6vw;gap:2.5vh; }
+.copa-cdown { width:100%;background:rgba(0,0,0,0.4);border:2px solid rgba(255,215,0,0.55);border-radius:3.5vw;padding:5vw;text-align:center; }
+.copa-cdown-lbl { font-size:3.2vw;color:rgba(255,215,0,0.8);font-weight:700;text-transform:uppercase;letter-spacing:0.15vw;margin-bottom:2vw; }
+#copa-timer { font-size:10vw;font-weight:900;color:#FFDF00;font-variant-numeric:tabular-nums;line-height:1; }
+.copa-cdown-sub { font-size:3vw;color:rgba(255,255,255,0.5);margin-top:2vw; }
+.copa-stats { display:grid;grid-template-columns:1fr 1fr;gap:2.5vw;width:100%; }
+.copa-stat { background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.12);border-radius:3vw;padding:3.5vw;text-align:center; }
+.copa-stat-n { font-size:9vw;font-weight:900;color:#FFDF00;line-height:1; }
+.copa-stat-l { font-size:2.8vw;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1vw;margin-top:1vw; }
+.copa-banner { width:100%;background:rgba(0,0,0,0.4);border:2px solid rgba(255,215,0,0.5);border-radius:3vw;padding:3.5vw 5vw;display:flex;align-items:center;justify-content:space-between; }
+.copa-banner-l .hexa { font-size:4.8vw;font-weight:900;color:#FFDF00; }
+.copa-banner-l .sub  { font-size:3.2vw;color:rgba(255,255,255,0.65); }
+.copa-banner-r .brand { font-size:5.5vw;font-weight:900;color:#fff;text-align:right;line-height:1; }
+.copa-banner-r .brand span { color:#FFDF00; }
+.copa-banner-r .url   { font-size:2.8vw;color:rgba(255,255,255,0.4);text-align:right; }
+
+/* Copa B */
+.copab-top { flex-shrink:0;background:rgba(0,0,0,0.5);border-bottom:2px solid rgba(255,215,0,0.3);padding:4vw 6vw;text-align:center; }
+.copab-pre   { font-size:3vw;font-weight:700;color:rgba(255,215,0,0.7);text-transform:uppercase;letter-spacing:0.2vw; }
+.copab-title { font-size:8vw;font-weight:900;color:#fff;line-height:1; }
+.copab-title span { color:#FFDF00; }
+.copab-sub   { font-size:3.2vw;color:rgba(255,255,255,0.5);margin-top:0.8vw; }
+.copab-list  { flex:1;display:flex;flex-direction:column;padding:3vw 5vw;gap:2.5vw;overflow:hidden; }
+.copab-game  { flex:1;border-radius:3vw;border:1.5px solid rgba(255,215,0,0.25);background:rgba(0,0,0,0.45);display:flex;align-items:stretch; }
+.copab-date-col { background:rgba(255,215,0,0.1);border-right:1px solid rgba(255,215,0,0.2);min-width:25vw;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3vw;text-align:center;gap:1vw; }
+.copab-rodada { font-size:2.6vw;font-weight:700;color:rgba(255,215,0,0.7);text-transform:uppercase; }
+.copab-data   { font-size:3.2vw;font-weight:700;color:#FFDF00; }
+.copab-hora   { font-size:5.5vw;font-weight:900;color:#fff;line-height:1; }
+.copab-hora small { font-size:2.8vw;color:rgba(255,255,255,0.4); }
+.copab-info { flex:1;padding:3vw 4vw;display:flex;flex-direction:column;justify-content:center;gap:1.5vw; }
+.copab-matchup { font-size:5vw;font-weight:800;color:#fff;line-height:1.3; }
+.copab-vs { font-size:3vw;color:rgba(255,255,255,0.35); }
+.copab-local { font-size:2.8vw;color:rgba(255,255,255,0.4); }
+.copab-footer { flex-shrink:0;background:rgba(0,0,0,0.55);border-top:1px solid rgba(255,215,0,0.2);padding:3.5vw 6vw;display:flex;align-items:center;justify-content:space-between; }
+.copab-tag { font-size:3.8vw;font-weight:800;color:#FFDF00; }
+.copab-tag-sub { font-size:2.8vw;color:rgba(255,255,255,0.5);margin-top:0.5vw; }
+.copab-brand { font-size:5.5vw;font-weight:900;color:#fff;text-align:right;line-height:1; }
+.copab-brand span { color:#FFDF00; }
+.copab-url { font-size:2.8vw;color:rgba(255,255,255,0.4);text-align:right;margin-top:0.5vw; }
+</style>
+</head>
+<body>
+<div id="vp">
+
+  <div id="loading"><div class="spinner"></div><p>Carregando vitrine...</p></div>
+
+  <!-- Cabeçalho fixo -->
+  <div class="sv-header">
+    <div>
+      <div class="sv-logo-name">Smart<span>View</span></div>
+      <div class="sv-logo-sub">Seu bairro na palma da sua mão</div>
+    </div>
+    <div class="header-right">
+      <div id="clock">--:--</div>
+      <div id="clock-date"></div>
+      <div id="weather">
+        <span id="w-icon">🌡️</span>&nbsp;
+        <span id="w-temp">--°C</span>&nbsp;
+        <span style="color:rgba(255,255,255,0.2)">💧</span>&nbsp;
+        <span id="w-hum">--%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slides TikTok -->
+  <div class="slides-viewport">
+
+    <!-- Painel A -->
+    <div class="slide-panel pos-center" id="panel-a">
+      <div class="photo-wrap">
+        <img class="slide-photo" id="photo-a" src="" alt="">
+        <div class="photo-grad"></div>
+        <div class="cat-badge" id="cat-a">🏪 COMÉRCIO</div>
+        <img class="store-logo-thumb" id="logo-a" src="" alt="">
+        <div class="photo-bottom">
+          <div class="store-name" id="name-a"></div>
+          <div class="store-desc" id="desc-a"></div>
+        </div>
+      </div>
+      <div class="qr-wrap">
+        <div class="qr-perfil-lbl">Perfil completo disponível</div>
+        <div class="qr-cta">📱 Escaneie e conheça nossa loja</div>
+        <div class="store-coupon" id="coupon-a">🎟️ Cupom disponível — Escaneie para resgatar</div>
+        <div class="store-promo" id="promo-a">
+          <div class="promo-title" id="promo-title-a"></div>
+          <div class="promo-desc"  id="promo-desc-a"></div>
+        </div>
+        <div class="qr-img-box"><img class="store-qr" id="qr-a" src="" alt="QR"></div>
+        <div class="qr-hint">Aponte a câmera do seu celular para o código</div>
+      </div>
+    </div>
+
+    <!-- Painel B -->
+    <div class="slide-panel pos-below" id="panel-b">
+      <div class="photo-wrap">
+        <img class="slide-photo" id="photo-b" src="" alt="">
+        <div class="photo-grad"></div>
+        <div class="cat-badge" id="cat-b">🏪 COMÉRCIO</div>
+        <img class="store-logo-thumb" id="logo-b" src="" alt="">
+        <div class="photo-bottom">
+          <div class="store-name" id="name-b"></div>
+          <div class="store-desc" id="desc-b"></div>
+        </div>
+      </div>
+      <div class="qr-wrap">
+        <div class="qr-perfil-lbl">Perfil completo disponível</div>
+        <div class="qr-cta">📱 Escaneie e conheça nossa loja</div>
+        <div class="store-coupon" id="coupon-b">🎟️ Cupom disponível — Escaneie para resgatar</div>
+        <div class="store-promo" id="promo-b">
+          <div class="promo-title" id="promo-title-b"></div>
+          <div class="promo-desc"  id="promo-desc-b"></div>
+        </div>
+        <div class="qr-img-box"><img class="store-qr" id="qr-b" src="" alt="QR"></div>
+        <div class="qr-hint">Aponte a câmera do seu celular para o código</div>
+      </div>
+    </div>
+
+  </div><!-- slides-viewport -->
+
+  <!-- Rodapé fixo -->
+  <div class="sv-footer">
+    <div id="store-meta"></div>
+    <div class="footer-nav">
+      <div id="dots"></div>
+      <div class="progress-track"><div id="progress-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- Copa B (z-index 14) -->
+  <div id="copa-view-b">
+    <div class="copab-top">
+      <div class="copab-pre">⚽ Copa do Mundo 2026 — Fase de Grupos</div>
+      <div class="copab-title">🇧🇷 <span>Jogos do Brasil</span></div>
+      <div class="copab-sub">Marque na agenda — o Brasil vai ao Hexa!</div>
+    </div>
+    <div class="copab-list" id="copa-b-games"></div>
+    <div class="copab-footer">
+      <div>
+        <div class="copab-tag">🏪 Tudo para a torcida está no bairro!</div>
+        <div class="copab-tag-sub">Acesse o portal SmartView</div>
+      </div>
+      <div>
+        <div class="copab-brand">Smart<span>View</span></div>
+        <div class="copab-url">smartviewtech.com.br</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copa A (z-index 15) -->
+  <div id="copa-view">
+    <div class="copa-top">
+      <div class="copa-flag">🇧🇷</div>
+      <div class="copa-title-block">
+        <div class="copa-lbl">⚽ Aguardado por todo o Brasil</div>
+        <div class="copa-main">COPA 2026</div>
+        <div class="copa-host">🇺🇸 EUA • 🇨🇦 Canadá • 🇲🇽 México</div>
+      </div>
+      <div class="copa-trophy">🏆</div>
+    </div>
+    <div class="copa-body">
+      <div class="copa-cdown">
+        <div class="copa-cdown-lbl">Faltam para a Copa começar</div>
+        <div id="copa-timer">-- DIAS • --h • --m</div>
+        <div class="copa-cdown-sub">📅 11 de junho de 2026 · Vai, Brasil! 🇧🇷</div>
+      </div>
+      <div class="copa-stats">
+        <div class="copa-stat"><div class="copa-stat-n">48</div><div class="copa-stat-l">Seleções</div></div>
+        <div class="copa-stat"><div class="copa-stat-n">12</div><div class="copa-stat-l">Grupos</div></div>
+        <div class="copa-stat"><div class="copa-stat-n">16</div><div class="copa-stat-l">Cidades</div></div>
+        <div class="copa-stat"><div class="copa-stat-n">104</div><div class="copa-stat-l">Jogos</div></div>
+      </div>
+      <div class="copa-banner">
+        <div class="copa-banner-l">
+          <div class="hexa">🏆 SmartView torce pelo Hexa!</div>
+          <div class="sub">O Brasil inteiro na torcida 🇧🇷</div>
+        </div>
+        <div class="copa-banner-r">
+          <div class="brand">Smart<span>View</span></div>
+          <div class="url">smartviewtech.com.br</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #vp -->
+
+<script>
+// ── Relógio ──
+var DIAS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function pad(n){ return n<10?'0'+n:''+n; }
+function getSP(){ var now=new Date(); try{ var fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hour12:false}); var p={}; fmt.formatToParts(now).forEach(function(x){ p[x.type]=parseInt(x.value)||0; }); var h=p.hour===24?0:p.hour; var d=new Date(p.year,p.month-1,p.day); return {h:h,m:p.minute,dow:d.getDay(),date:p.day,month:p.month-1}; }catch(e){ var s=new Date(Date.now()-3*3600000); return {h:s.getUTCHours(),m:s.getUTCMinutes(),dow:s.getUTCDay(),date:s.getUTCDate(),month:s.getUTCMonth()}; } }
+function tick(){ try{ var t=getSP(); document.getElementById('clock').textContent=pad(t.h)+':'+pad(t.m); document.getElementById('clock-date').textContent=DIAS[t.dow]+', '+t.date+' de '+MESES[t.month]; }catch(e){} }
+tick(); setInterval(tick,1000);
+
+// ── Clima ──
+function wIcon(c){ if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=48)return'🌫️';if(c<=67)return'🌧️';if(c<=82)return'🌦️';return'⛈️'; }
+fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.61&longitude=-46.65&current=temperature_2m,relative_humidity_2m,weathercode&timezone=America%2FSao_Paulo')
+  .then(function(r){ return r.json(); })
+  .then(function(d){ var c=d.current; document.getElementById('w-icon').textContent=wIcon(c.weathercode); document.getElementById('w-temp').textContent=Math.round(c.temperature_2m)+'°C'; document.getElementById('w-hum').textContent=c.relative_humidity_2m+'%'; document.getElementById('weather').style.display='flex'; })
+  .catch(function(){});
+setInterval(function(){ fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.61&longitude=-46.65&current=temperature_2m,relative_humidity_2m,weathercode&timezone=America%2FSao_Paulo').then(function(r){ return r.json(); }).then(function(d){ var c=d.current; document.getElementById('w-icon').textContent=wIcon(c.weathercode); document.getElementById('w-temp').textContent=Math.round(c.temperature_2m)+'°C'; document.getElementById('w-hum').textContent=c.relative_humidity_2m+'%'; }).catch(function(){}); },10*60*1000);
+
+// ── QR cache ──
+function qrKey(url){ return 'sv_qr_'+btoa(unescape(encodeURIComponent(url))).slice(0,40); }
+function setQR(img,url){ if(!url)return; var c=null; try{c=localStorage.getItem(qrKey(url));}catch(e){} if(c){img.src=c;return;} var enc=encodeURIComponent(url); img.src='https://api.qrserver.com/v1/create-qr-code/?size=440x440&data='+enc; fetch('https://api.qrserver.com/v1/create-qr-code/?size=440x440&data='+enc).then(function(r){return r.blob();}).then(function(blob){ var reader=new FileReader(); reader.onload=function(){ try{localStorage.setItem(qrKey(url),reader.result);}catch(e){} img.src=reader.result; }; reader.readAsDataURL(blob); }).catch(function(){ img.src='https://chart.googleapis.com/chart?cht=qr&chs=440x440&chl='+enc; }); }
+
+// ── Config ──
+var API_BASE='https://admin.smartviewtech.com.br';
+(function(){ var f=new URLSearchParams(window.location.search).get('code')||(location.hash?location.hash.replace('#',''):''); if(f){ sessionStorage.setItem('sv_code',f); if(history.replaceState) history.replaceState({},'',location.pathname); } })();
+var CODE=sessionStorage.getItem('sv_code')||'';
+var PORTAL='https://portal.smartviewtech.com.br';
+var SLIDE_MS=14000;
+var stores=[]; var current=0; var slideTimer=null; var activePanelIdx=0;
+var isTransitioning=false;
+
+var CATS={ mercado:'🛒 Mercado',supermercado:'🛒 Supermercado',farmacia:'💊 Farmácia',padaria:'🍞 Padaria',restaurante:'🍽️ Restaurante',lanchonete:'🍔 Lanchonete',pizzaria:'🍕 Pizzaria',acougue:'🥩 Açougue',petshop:'🐾 Pet Shop',salao:'💇 Salão',barbearia:'✂️ Barbearia',academia:'💪 Academia',clinica:'🏥 Clínica',odonto:'🦷 Odontologia',auto:'🔧 Auto',eletro:'⚡ Eletrônicos',moda:'👗 Moda',calcados:'👟 Calçados',moveis:'🛋️ Móveis',papelaria:'📚 Papelaria',floricultura:'🌸 Floricultura',bar:'🍺 Bar',sorvete:'🍦 Sorveteria',outros:'🏪 Comércio' };
+
+// Referências dos painéis
+var P=[
+  { el:document.getElementById('panel-a'), photo:document.getElementById('photo-a'), cat:document.getElementById('cat-a'), logo:document.getElementById('logo-a'), name:document.getElementById('name-a'), desc:document.getElementById('desc-a'), qr:document.getElementById('qr-a'), coupon:document.getElementById('coupon-a'), promo:document.getElementById('promo-a'), promoTitle:document.getElementById('promo-title-a'), promoDesc:document.getElementById('promo-desc-a') },
+  { el:document.getElementById('panel-b'), photo:document.getElementById('photo-b'), cat:document.getElementById('cat-b'), logo:document.getElementById('logo-b'), name:document.getElementById('name-b'), desc:document.getElementById('desc-b'), qr:document.getElementById('qr-b'), coupon:document.getElementById('coupon-b'), promo:document.getElementById('promo-b'), promoTitle:document.getElementById('promo-title-b'), promoDesc:document.getElementById('promo-desc-b') }
+];
+
+function norm(raw,i){ var pr=raw.promotion||{}; var sid=raw.id||raw.store_id||raw.slug||''; var qr=raw.link_qrcode||(sid?PORTAL+'/loja/'+sid+'?src=vitrine':PORTAL); return {name:raw.name||'',description:raw.description||'',category:raw.category||'outros',address:raw.address||'',phone:raw.phone||'',whatsapp:raw.whatsapp||'',logo:raw.logo||'',bg:raw.photo_vitrine||'',qr:qr,promotions:pr.exists&&pr.phrase?[{title:pr.phrase}]:[],coupon:null}; }
+
+// ── API ──
+function apiLoad(){ return fetch(API_BASE+'/api/v1/vitrine?code='+CODE,{headers:{'Authorization':'Bearer '+CODE,'Accept':'application/json'}}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }); }
+var CK='sv_p_'+(CODE||'x');
+function saveC(d){ try{localStorage.setItem(CK,JSON.stringify(d));}catch(e){} }
+function loadC(){ try{var d=localStorage.getItem(CK);return d?JSON.parse(d):null;}catch(e){return null;} }
+function preload(list){ list.forEach(function(s){ if(s.photo_vitrine) new Image().src=s.photo_vitrine; if(s.logo) new Image().src=s.logo; }); }
+
+function applyData(data,first){ saveC(data); preload(data.stores||[]); stores=(data.stores||[]).map(norm).filter(function(s){return s.name;}); if(first) init(); else if(current>=stores.length) current=0; }
+function poll(){ setInterval(function(){ apiLoad().then(function(d){applyData(d,false);}).catch(function(){}); },43200000); }
+
+function start(){ if(!API_BASE||!CODE){ fsLoad(); return; } apiLoad().then(function(d){ applyData(d,true); poll(); }).catch(function(){ var c=loadC(); if(c){ applyData(c,true); var r=setInterval(function(){ apiLoad().then(function(d){clearInterval(r);applyData(d,false);poll();}).catch(function(){}); },43200000); } else fsLoad(); }); }
+
+function fsLoad(){ fetch('https://firestore.googleapis.com/v1/projects/smartsjc-c0882/databases/(default)/documents:runQuery',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({structuredQuery:{from:[{collectionId:'stores'}],where:{compositeFilter:{op:'AND',filters:[{fieldFilter:{field:{fieldPath:'plan'},op:'EQUAL',value:{stringValue:'premium'}}},{fieldFilter:{field:{fieldPath:'active'},op:'EQUAL',value:{booleanValue:true}}}]}}}})}).then(function(r){return r.json();}).then(function(data){ stores=data.filter(function(i){return i.document;}).map(function(i){ var f=i.document.fields||{}; var id=i.document.name.split('/').pop(); function s(k){return f[k]&&f[k].stringValue||'';} var pr=[]; if(f.promotions&&f.promotions.arrayValue&&f.promotions.arrayValue.values) f.promotions.arrayValue.values.forEach(function(v){ var m=v.mapValue&&v.mapValue.fields; if(m) pr.push({title:m.title&&m.title.stringValue||''}); }); return {name:s('name'),description:s('description'),category:s('category')||'outros',address:s('address'),phone:s('phone'),whatsapp:s('whatsapp'),logo:s('logo'),bg:s('vitrineBg'),qr:PORTAL+'/loja/'+id+'?src=qr',promotions:pr,coupon:null}; }).filter(function(s){return s.name;}); init(); }).catch(function(){init();}); }
+
+// ── Init ──
+function init(){
+  document.getElementById('loading').style.display='none';
+  if(!stores.length) return;
+  // Dots
+  var dotsEl=document.getElementById('dots'); dotsEl.innerHTML='';
+  stores.forEach(function(_,i){ var d=document.createElement('div'); d.className='dot'+(i===0?' active':''); dotsEl.appendChild(d); });
+  // Preenche painel A
+  fill(P[0],stores[0]); P[0].el.className='slide-panel pos-center';
+  P[1].el.className='slide-panel pos-below';
+  updateMeta(stores[0]);
+  startPB(); scheduleNext();
+}
+
+function fitName(el){ var steps=[7,6,5,4.2]; for(var i=0;i<steps.length;i++){ el.style.fontSize=steps[i]+'vw'; if(el.scrollHeight<=el.clientHeight+4) break; } }
+
+function fill(p,s){
+  if(s.bg){ p.photo.src=s.bg; p.photo.style.display='block'; } else { p.photo.style.display='none'; }
+  if(s.logo){ p.logo.src=s.logo; p.logo.style.display='block'; } else { p.logo.style.display='none'; }
+  p.cat.textContent=CATS[s.category]||CATS['outros'];
+  p.name.textContent=s.name; fitName(p.name);
+  p.desc.textContent=s.description;
+  if(s.coupon&&s.coupon.active){ p.coupon.style.display='block'; p.promo.style.display='none'; }
+  else if(s.promotions&&s.promotions[0]&&s.promotions[0].title){ p.coupon.style.display='none'; p.promo.style.display='block'; p.promoTitle.textContent=s.promotions[0].title; p.promoDesc.textContent=s.promotions[0].description||''; }
+  else { p.coupon.style.display='none'; p.promo.style.display='none'; }
+  setQR(p.qr,s.qr||PORTAL);
+}
+
+function updateMeta(s){ var m=[]; if(s.address) m.push('📍 '+s.address); if(s.phone) m.push('📞 '+s.phone); if(s.whatsapp) m.push('💬 '+s.whatsapp); document.getElementById('store-meta').textContent=m.join('\n'); }
+function updateDots(idx){ document.getElementById('dots').querySelectorAll('.dot').forEach(function(d,i){ d.classList.toggle('active',i===idx); }); }
+
+function startPB(){ var bar=document.getElementById('progress-bar'); if(!bar)return; bar.style.transition='none'; bar.style.width='0%'; requestAnimationFrame(function(){ requestAnimationFrame(function(){ bar.style.transition='width '+SLIDE_MS+'ms linear'; bar.style.width='100%'; }); }); }
+
+// ── Transição TikTok ──
+function nextSlide(){
+  if(isTransitioning) return;
+  isTransitioning=true;
+  current=(current+1)%stores.length;
+  var cur=P[activePanelIdx], nxt=P[1-activePanelIdx];
+  fill(nxt,stores[current]);
+  nxt.el.className='slide-panel pos-below'; // posiciona embaixo sem animação
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    cur.el.className='slide-panel pos-above';  // sai pelo topo
+    nxt.el.className='slide-panel pos-center'; // sobe do fundo
+    activePanelIdx=1-activePanelIdx;
+    updateDots(current);
+    updateMeta(stores[current]);
+    startPB();
+    setTimeout(function(){ isTransitioning=false; },700);
+  }); });
+}
+function scheduleNext(){ clearTimeout(slideTimer); slideTimer=setTimeout(function(){ nextSlide(); scheduleNext(); },SLIDE_MS); }
+
+var firstClick=true;
+document.addEventListener('click',function(){ if(firstClick){ firstClick=false; var el=document.documentElement; var p=el.requestFullscreen?el.requestFullscreen():el.webkitRequestFullscreen?(el.webkitRequestFullscreen(),null):null; if(p&&p.catch)p.catch(function(){}); return; } if(!stores.length||copaActive)return; clearTimeout(slideTimer); nextSlide(); scheduleNext(); });
+if('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(function(){});
+
+// ── Copa ──
+var COPA_DATE=new Date('2026-06-11T12:00:00-03:00');
+var copaActive=false; var copaTA=null; var copaTB=null; var copaIv=null;
+var JOGOS=[
+  {rodada:'1º Jogo',data:'13 JUN',hora:'19h00',adv:'🇲🇦 Marrocos',local:'📍 MetLife Stadium, Nova Jersey'},
+  {rodada:'2º Jogo',data:'19 JUN',hora:'21h30',adv:'🇭🇹 Haiti',   local:'📍 Lincoln Financial, Filadélfia'},
+  {rodada:'3º Jogo',data:'24 JUN',hora:'19h00',adv:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escócia',local:'📍 Hard Rock Stadium, Miami'},
+];
+function updCopa(){ var el=document.getElementById('copa-timer'); if(!el)return; var diff=COPA_DATE-new Date(); if(diff<=0){el.textContent='A COPA ESTÁ ACONTECENDO! ⚽';return;} var d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000); el.textContent=d+' DIAS • '+pad(h)+'h • '+pad(m)+'m'; }
+function buildB(){ var el=document.getElementById('copa-b-games'); if(!el)return; el.innerHTML=JOGOS.map(function(j){ return '<div class="copab-game"><div class="copab-date-col"><div class="copab-rodada">'+j.rodada+'</div><div class="copab-data">'+j.data+'</div><div class="copab-hora">'+j.hora+' <small>BRT</small></div></div><div class="copab-info"><div class="copab-matchup">🇧🇷 Brasil <span class="copab-vs">vs</span><br>'+j.adv+'</div><div class="copab-local">'+j.local+'</div></div></div>'; }).join(''); }
+function showCopa(){
+  if(copaActive||!stores.length)return;
+  copaActive=true; clearTimeout(slideTimer);
+  var bar=document.getElementById('progress-bar'); if(bar){bar.style.transition='none';bar.style.width='0%';}
+  var cA=document.getElementById('copa-view');
+  cA.classList.add('show'); updCopa(); copaIv=setInterval(updCopa,10000);
+  copaTA=setTimeout(function(){
+    clearInterval(copaIv);
+    var cB=document.getElementById('copa-view-b');
+    buildB(); cB.classList.add('show');
+    cA.classList.add('fading');
+    setTimeout(function(){ cA.classList.remove('show'); cA.classList.remove('fading'); },400);
+    copaTB=setTimeout(function(){
+      cB.classList.remove('show'); copaActive=false;
+      fill(P[activePanelIdx],stores[current]);
+      startPB(); scheduleNext();
+    },15000);
+  },13000);
+}
+setInterval(showCopa,60000);
+
+start();
+</script>
+</body>
+</html>

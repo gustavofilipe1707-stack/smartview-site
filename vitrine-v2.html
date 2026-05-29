@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SmartView — Vitrine</title>
+<style>
+/* Fonte do sistema — sem requisição externa */
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:100%; height:100%; overflow:hidden; background:#020617; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif; color:#fff; cursor:none; }
+
+#vp { width:100vw; height:100vh; position:relative; overflow:hidden; display:flex; flex-direction:column; }
+
+/* Gradientes de fundo — sem animação, só cor */
+.bg-0{background:#064e3b;} .bg-1{background:#1e3a5f;} .bg-2{background:#3b0764;}
+.bg-3{background:#7f1d1d;} .bg-4{background:#451a03;} .bg-5{background:#083344;}
+.bg-6{background:#1e1b4b;} .bg-7{background:#134e4a;}
+
+/* Loading */
+#loading { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#020617;gap:2vh;z-index:20; }
+.spinner { width:6vw;height:6vw;border:0.5vw solid rgba(99,102,241,0.2);border-top-color:#6366f1;border-radius:50%;animation:spin 0.9s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg);} }
+#loading p { color:rgba(255,255,255,0.5);font-size:2.5vw; }
+
+/* Empty */
+#empty { display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;background:#020617;gap:3vh;text-align:center; }
+#empty h1 { font-size:8vw;font-weight:900;color:#6366f1; }
+#empty p  { color:rgba(255,255,255,0.45);font-size:2.5vw; }
+#empty .qr-card { background:#fff;border-radius:2vw;padding:1.5vw; }
+
+/* Slide container */
+#slide { display:none;position:absolute;inset:0;flex-direction:column; }
+#slide-photo   { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.30;display:none; }
+#slide-overlay { position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.30) 55%,rgba(0,0,0,0.05) 100%);display:none; }
+
+/* Top bar */
+.top-bar { position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:4vh 6vw 0;height:15vh;flex-shrink:0; }
+
+/* Animações mínimas — só ticker e spinner */
+@keyframes tickerMove { 0%{transform:translateX(100vw);} 100%{transform:translateX(-100%);} }
+@keyframes couponBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Marca — sem backdrop-filter, sem animação */
+.brand { display:flex;align-items:center;gap:1.2vw;margin-top:2vh; }
+.sv-qr-panel {
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.25);border-radius:0.8vw;
+  padding:0.35vw;display:flex;flex-direction:column;align-items:center;gap:0.3vh;
+}
+#sv-qr { display:block;width:5.5vw;height:5.5vw;border-radius:0.4vw; }
+.sv-qr-label { font-size:0.7vw;font-weight:800;text-transform:uppercase;letter-spacing:0.06vw;color:#a5b4fc;text-align:center;line-height:1.2; }
+.brand-text { display:flex;flex-direction:column;gap:0.2vh; }
+.brand-name { font-size:2vw;font-weight:900;line-height:1; }
+.brand-sub  { font-size:0.9vw;color:rgba(255,255,255,0.5); }
+.brand-cta  { font-size:0.95vw;font-weight:700;color:#a5b4fc;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.4);border-radius:4vw;padding:0.3vh 0.9vw;display:inline-block;margin-top:0.3vh;white-space:nowrap; }
+
+/* Clima — sem backdrop-filter */
+#weather { display:none;align-items:center;gap:1vw;background:rgba(255,255,255,0.15);border-radius:1vw;padding:1vh 1.8vw;border:1px solid rgba(255,255,255,0.2); }
+.w-icon { font-size:3vh;line-height:1; }
+#w-temp { font-size:2.5vw;font-weight:900;color:#fff;line-height:1; }
+#w-desc { font-size:0.9vw;color:rgba(255,255,255,0.55);margin-top:0.2vh;text-transform:capitalize; }
+.w-div  { width:1px;height:4vh;background:rgba(255,255,255,0.2);margin:0 0.3vw; }
+.w-hum-wrap { display:flex;align-items:center;gap:0.4vw; }
+.w-drop { font-size:2.5vh; }
+#w-hum  { font-size:2.2vw;font-weight:700;color:rgba(255,255,255,0.9); }
+
+/* Relógio */
+.clock-wrap { text-align:right; }
+#clock      { font-size:4.2vw;font-weight:900;letter-spacing:-0.1vw;font-variant-numeric:tabular-nums;line-height:1; }
+#clock-date { font-size:1.2vw;color:rgba(255,255,255,0.6);margin-top:0.4vh; }
+
+/* Main */
+#main { position:relative;z-index:2;flex:1;display:flex;align-items:center;padding:0 6vw;gap:3vw;overflow:hidden; }
+
+/* Logo loja — sem animação */
+#store-logo { width:18vw;height:18vw;max-height:60vh;border-radius:1.4vw;object-fit:cover;border:0.25vw solid rgba(255,255,255,0.35);box-shadow:0 2vh 3vw rgba(0,0,0,0.7);flex-shrink:0;display:none; }
+
+.store-info { flex:1;min-width:0;overflow:hidden; }
+
+/* Categoria — sem backdrop-filter */
+#store-category { display:inline-flex;align-items:center;gap:0.5vw;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);border-radius:5vw;padding:0.5vh 1.4vw;font-size:1.3vw;font-weight:700;margin-bottom:1.2vh; }
+
+#store-name { font-size:4.2vw;font-weight:900;line-height:1.1;margin-bottom:1vh;text-shadow:0 4px 20px rgba(0,0,0,0.5);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; }
+#store-desc { font-size:1.8vw;color:rgba(255,255,255,0.88);line-height:1.45;margin-bottom:1.2vh;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:48vw; }
+
+#store-coupon { display:none;border-radius:0.8vw;padding:0.8vh 1.6vw;margin-bottom:1.2vh;font-size:1.5vw;font-weight:800;color:#1a1a00;background:#fbbf24;animation:couponBlink 2s ease-in-out infinite;border:none;box-shadow:0 0.5vh 2vw rgba(251,191,36,0.4); }
+
+/* Promoção — sem backdrop-filter */
+#store-promo { display:none;border-radius:1vw;padding:1vh 1.8vw;margin-bottom:1.2vh;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,215,0,0.4); }
+#promo-title { font-size:2.4vw;font-weight:900;color:#fcd34d;text-shadow:0 2px 8px rgba(0,0,0,0.4); }
+#promo-desc  { font-size:1.5vw;color:rgba(255,255,255,0.8);margin-top:0.4vh; }
+
+#store-meta  { display:flex;flex-wrap:wrap;gap:1.4vw;color:rgba(255,255,255,0.75);font-size:1.4vw; }
+#store-meta span { display:flex;align-items:center;gap:0.4vw; }
+
+/* QR — sem animação */
+.qr-wrap { flex-shrink:0;text-align:center; }
+.qr-box  { background:#fff;border-radius:1.2vw;padding:0.8vw;box-shadow:0 2vh 4vw rgba(0,0,0,0.6);display:inline-block; }
+#store-qr { display:block;width:10vw;height:10vw; }
+.qr-label { font-size:1.1vw;color:rgba(255,255,255,0.65);margin-top:0.7vh;font-weight:600; }
+
+/* Rodapé */
+.bottom-bar { position:relative;z-index:2;padding:0 6vw 4vh;flex-shrink:0; }
+#dots { display:flex;gap:0.5vw;align-items:center;margin-bottom:0.8vh; }
+.dot { height:0.5vh;border-radius:0.3vw;background:rgba(255,255,255,0.3);transition:width 0.3s,background 0.3s;flex-shrink:0; }
+.dot.active { background:#fff;width:2.5vw !important; }
+.progress-track { flex:1;margin-left:1vw;height:0.5vh;background:rgba(255,255,255,0.15);border-radius:0.2vw;overflow:hidden; }
+#progress-bar { height:100%;width:0%;background:#6366f1;border-radius:0.2vw;transition:width 0.25s linear; }
+
+/* Ticker */
+.ticker-wrap  { background:rgba(0,0,0,0.5);border-radius:0.8vw;padding:0.9vh 1.4vw;overflow:hidden;border:1px solid rgba(255,255,255,0.08); }
+.ticker-inner { display:flex;align-items:center;gap:1.4vw; }
+.ticker-label { font-size:1.1vw;font-weight:900;text-transform:uppercase;letter-spacing:0.12vw;color:#818cf8;flex-shrink:0; }
+.ticker-track { flex:1;overflow:hidden;position:relative; }
+#ticker-text  { display:inline-block;white-space:nowrap;font-size:1.4vw;color:rgba(255,255,255,0.8);animation:tickerMove 60s linear infinite; }
+
+/* ═══════════════════════════════════════════════════
+   COPA DO MUNDO 2026 — otimizado para Android 11
+   Sem backdrop-filter, sem gradientes animados,
+   animações reduzidas ao mínimo
+   ═══════════════════════════════════════════════════ */
+@keyframes copaFade { from{opacity:0;} to{opacity:1;} }
+
+/* Slide A — Countdown */
+#copa-view {
+  display:none;position:absolute;inset:0;z-index:4;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:#005c20;
+}
+#copa-view.show { display:flex;animation:copaFade 0.5s ease both; }
+
+.copa-inner { width:100%;padding:3vh 7vw;display:flex;flex-direction:column;align-items:center;gap:2.5vh; }
+
+.copa-head { display:flex;align-items:center;gap:2vw;background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.35);border-radius:1.5vw;padding:1.5vh 3vw;width:100%; }
+.copa-flag-big   { font-size:6vw;line-height:1; }
+.copa-title-block{ flex:1; }
+.copa-label      { font-size:1.2vw;font-weight:700;color:rgba(255,215,0,0.8);text-transform:uppercase;letter-spacing:0.2vw; }
+.copa-title-main { font-size:4vw;font-weight:900;line-height:1;color:#fff;text-shadow:0 0 2vw rgba(255,215,0,0.5); }
+.copa-hosts      { font-size:1.3vw;color:rgba(255,255,255,0.7);margin-top:0.5vh; }
+.copa-trophy     { font-size:6vw;line-height:1; }
+
+.copa-countdown-box { background:rgba(0,0,0,0.35);border:2px solid rgba(255,215,0,0.5);border-radius:1.2vw;padding:2vh 4vw;text-align:center;width:100%; }
+.copa-count-lbl { font-size:1.3vw;color:rgba(255,215,0,0.8);font-weight:700;text-transform:uppercase;letter-spacing:0.15vw;margin-bottom:1vh; }
+#copa-timer     { font-size:5vw;font-weight:900;color:#FFDF00;letter-spacing:-0.05vw;font-variant-numeric:tabular-nums;line-height:1; }
+.copa-start-date{ font-size:1.3vw;color:rgba(255,255,255,0.65);margin-top:1vh; }
+
+.copa-stats { display:flex;gap:2vw;width:100%;justify-content:center; }
+.copa-stat-card { background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:1vw;padding:1.5vh 2.5vw;text-align:center;flex:1; }
+.copa-stat-num  { font-size:3.5vw;font-weight:900;color:#FFDF00;line-height:1; }
+.copa-stat-lbl  { font-size:1.1vw;color:rgba(255,255,255,0.6);margin-top:0.4vh;text-transform:uppercase;letter-spacing:0.1vw; }
+
+.copa-smartview-banner { display:flex;align-items:center;justify-content:space-between;gap:2vw;width:100%;background:rgba(0,0,0,0.35);border:2px solid rgba(255,215,0,0.55);border-radius:1vw;padding:1.2vh 2.5vw; }
+.copa-sv-left  { display:flex;flex-direction:column;gap:0.3vh; }
+.copa-sv-hexa  { font-size:1.8vw;font-weight:900;color:#FFDF00; }
+.copa-sv-sub   { font-size:1.2vw;color:rgba(255,255,255,0.75); }
+.copa-sv-brand { font-size:2vw;font-weight:900;color:#fff;line-height:1; }
+.copa-sv-brand span { color:#FFDF00; }
+.copa-sv-url   { font-size:1vw;color:rgba(255,255,255,0.55);margin-top:0.2vh; }
+
+/* Slide B — Jogos do Brasil */
+#copa-view-b {
+  display:none;position:absolute;inset:0;z-index:4;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:#003d16;
+}
+#copa-view-b.show { display:flex;animation:copaFade 0.5s ease both; }
+
+.copab-inner { width:100%;padding:3vh 7vw;display:flex;flex-direction:column;align-items:center;gap:2vh; }
+
+.copab-header { text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.6vh; }
+.copab-pretitle { font-size:1.2vw;font-weight:700;color:rgba(255,215,0,0.7);letter-spacing:0.2vw;text-transform:uppercase; }
+.copab-title { font-size:3.8vw;font-weight:900;color:#fff;line-height:1;text-shadow:0 4px 12px rgba(0,0,0,0.4); }
+.copab-title span { color:#FFDF00; }
+.copab-sub { font-size:1.3vw;color:rgba(255,255,255,0.65); }
+
+.copab-games { display:flex;gap:1.5vw;width:100%; }
+.copab-game  { flex:1;border-radius:1.2vw;overflow:hidden;border:1.5px solid rgba(255,215,0,0.25);background:rgba(0,0,0,0.4);display:flex;flex-direction:column; }
+.copab-game-top  { background:rgba(255,215,0,0.12);border-bottom:1px solid rgba(255,215,0,0.2);padding:0.8vh 1.4vw;display:flex;justify-content:space-between;align-items:center; }
+.copab-rodada    { font-size:0.9vw;font-weight:700;color:rgba(255,215,0,0.8);text-transform:uppercase;letter-spacing:0.1vw; }
+.copab-num       { font-size:0.9vw;font-weight:700;color:rgba(255,255,255,0.4); }
+.copab-game-body { padding:1.2vh 1.4vw;flex:1;display:flex;flex-direction:column;gap:0.8vh; }
+.copab-data      { font-size:1.3vw;font-weight:700;color:#FFDF00; }
+.copab-hora      { font-size:2.2vw;font-weight:900;color:#fff;line-height:1; }
+.copab-hora small{ font-size:1.2vw;color:rgba(255,255,255,0.5); }
+.copab-matchup   { display:flex;align-items:center;gap:0.6vw;font-size:1.3vw;color:rgba(255,255,255,0.85);font-weight:600;margin-top:0.4vh; }
+.copab-vs        { color:rgba(255,255,255,0.35);font-size:1.1vw; }
+.copab-local     { font-size:1vw;color:rgba(255,255,255,0.45);margin-top:0.3vh; }
+
+.copab-footer { width:100%;border-radius:1.2vw;overflow:hidden;border:1.5px solid rgba(255,215,0,0.3);display:flex;align-items:stretch; }
+.copab-footer-left { flex:1;background:rgba(0,0,0,0.4);padding:1.2vh 2vw;display:flex;flex-direction:column;justify-content:center;gap:0.4vh; }
+.copab-footer-tagline { font-size:1.6vw;font-weight:900;color:#FFDF00; }
+.copab-footer-sub     { font-size:1.1vw;color:rgba(255,255,255,0.7); }
+.copab-footer-right   { background:rgba(255,215,0,0.12);padding:1.2vh 2.5vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.3vh;border-left:1.5px solid rgba(255,215,0,0.2); }
+.copab-brand     { font-size:2vw;font-weight:900;color:#fff;line-height:1; }
+.copab-brand span{ color:#FFDF00; }
+.copab-url       { font-size:0.9vw;color:rgba(255,255,255,0.5); }
+
+/* Zoom controls */
+#scale-controls { position:fixed;bottom:1vh;right:1vw;z-index:9999;display:flex;flex-direction:column;align-items:center;gap:0.5vh;cursor:default; }
+#scale-toggle   { width:3.5vh;height:3.5vh;border-radius:50%;background:rgba(0,0,0,0.55);border:2px solid rgba(255,255,255,0.2);color:#fff;font-size:1.8vh;display:flex;align-items:center;justify-content:center;cursor:pointer; }
+#scale-panel    { display:none;flex-direction:column;align-items:center;gap:0.5vh;background:rgba(0,0,0,0.85);border:1px solid rgba(255,255,255,0.15);border-radius:0.6vw;padding:0.8vh 1vw; }
+#scale-panel.open { display:flex; }
+.sc-label  { font-size:0.7vw;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase; }
+#scale-val { font-size:1.1vw;font-weight:700;color:#fff;min-width:3.5vw;text-align:center; }
+.sc-row    { display:flex;gap:0.4vw; }
+.sc-btn    { width:3.2vh;height:3.2vh;border-radius:0.5vw;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:1.8vh;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer; }
+.sc-presets{ display:flex;gap:0.4vw;margin-top:0.2vh; }
+.sc-preset { font-size:0.7vw;font-weight:600;padding:0.3vh 0.6vw;border-radius:0.4vw;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);cursor:pointer; }
+.sc-reset  { font-size:0.7vw;color:rgba(255,255,255,0.35);cursor:pointer;text-decoration:underline;margin-top:0.2vh; }
+</style>
+</head>
+<body>
+
+<div id="scale-controls">
+  <div id="scale-panel">
+    <div class="sc-label">Zoom</div>
+    <div id="scale-val">100%</div>
+    <div class="sc-row">
+      <div class="sc-btn" id="sc-minus">−</div>
+      <div class="sc-btn" id="sc-plus">+</div>
+    </div>
+    <div class="sc-presets">
+      <div class="sc-preset" data-z="0.8">80%</div>
+      <div class="sc-preset" data-z="1.0">100%</div>
+      <div class="sc-preset" data-z="1.2">120%</div>
+    </div>
+    <div class="sc-reset" id="sc-auto">Resetar</div>
+  </div>
+  <div id="scale-toggle" title="Ajustar zoom">⚙</div>
+</div>
+
+<div id="vp">
+  <div id="loading"><div class="spinner"></div><p>Carregando vitrine...</p></div>
+
+  <div id="empty">
+    <h1>SmartView</h1>
+    <p>São João Clímaco Digital</p>
+    <p style="font-size:2vw;color:rgba(255,255,255,0.3)">Em breve os comércios do bairro aparecerão aqui</p>
+    <div class="qr-card"><img id="empty-qr" src="" alt="QR" style="width:18vw;height:18vw;"></div>
+    <p style="font-size:1.6vw;color:rgba(255,255,255,0.3)">Acesse o portal</p>
+  </div>
+
+  <div id="slide">
+    <img id="slide-photo" src="" alt="">
+    <div id="slide-overlay"></div>
+    <div class="top-bar">
+      <div class="brand">
+        <div class="sv-qr-panel">
+          <img id="sv-qr" src="" alt="QR SmartView">
+          <div class="sv-qr-label">Anuncie na<br>SmartView</div>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">SmartView</div>
+          <div class="brand-sub">São João Clímaco Digital</div>
+          <div class="brand-cta">▶ www.smartviewtech.com.br</div>
+        </div>
+      </div>
+      <div id="weather">
+        <div class="w-icon">⛅</div>
+        <div><div id="w-temp">--°C</div><div id="w-desc">Carregando...</div></div>
+        <div class="w-div"></div>
+        <div class="w-hum-wrap"><div class="w-drop">💧</div><div id="w-hum">--%</div></div>
+      </div>
+      <div class="clock-wrap"><div id="clock">--:--</div><div id="clock-date"></div></div>
+    </div>
+    <div id="main">
+      <img id="store-logo" src="" alt="">
+      <div class="store-info">
+        <div id="store-category">🏪 Comércio</div>
+        <div id="store-name"></div>
+        <div id="store-desc"></div>
+        <div id="store-coupon">🎟️ Cupom disponível — Escaneie o QR para resgatar</div>
+        <div id="store-promo"><div id="promo-title"></div><div id="promo-desc"></div></div>
+        <div id="store-meta"></div>
+      </div>
+      <div class="qr-wrap">
+        <div class="qr-box"><img id="store-qr" src="" alt="QR Code"></div>
+        <div class="qr-label">Acesse o perfil completo</div>
+      </div>
+    </div>
+    <div class="bottom-bar">
+      <div id="dots"></div>
+      <div class="ticker-wrap">
+        <div class="ticker-inner">
+          <span class="ticker-label">SJC Digital</span>
+          <div class="ticker-track"><span id="ticker-text"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COPA B — Jogos do Brasil (sem stripes animadas) -->
+  <div id="copa-view-b">
+    <div class="copab-inner">
+      <div class="copab-header">
+        <div class="copab-pretitle">⚽ Copa do Mundo 2026 — Fase de Grupos</div>
+        <div class="copab-title">🇧🇷 Prepare-se para os <span>Jogos!</span></div>
+        <div class="copab-sub">Marque na agenda — o Brasil vai ao Hexa!</div>
+      </div>
+      <div class="copab-games" id="copa-b-games"></div>
+      <div class="copab-footer">
+        <div class="copab-footer-left">
+          <div class="copab-footer-tagline">🏪 Tudo que você precisa para a torcida está no bairro!</div>
+          <div class="copab-footer-sub">Acesse o portal SmartView e descubra o melhor do seu bairro</div>
+        </div>
+        <div class="copab-footer-right">
+          <div class="copab-brand">Smart<span>View</span></div>
+          <div class="copab-url">smartviewtech.com.br</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COPA A — Countdown (sem stripes animadas, sem backdrop-filter) -->
+  <div id="copa-view">
+    <div class="copa-inner">
+      <div class="copa-head">
+        <div class="copa-flag-big">🇧🇷</div>
+        <div class="copa-title-block">
+          <div class="copa-label">⚽ Aguardado por todo o Brasil</div>
+          <div class="copa-title-main">COPA DO MUNDO 2026</div>
+          <div class="copa-hosts">🇺🇸 Estados Unidos &nbsp;•&nbsp; 🇨🇦 Canadá &nbsp;•&nbsp; 🇲🇽 México</div>
+        </div>
+        <div class="copa-trophy">🏆</div>
+      </div>
+      <div class="copa-countdown-box">
+        <div class="copa-count-lbl">Faltam para a Copa começar</div>
+        <div id="copa-timer">-- DIAS • --h • --m</div>
+        <div class="copa-start-date">📅 Início: 11 de junho de 2026 &nbsp;·&nbsp; Vai, Brasil! 🇧🇷</div>
+      </div>
+      <div class="copa-stats">
+        <div class="copa-stat-card"><div class="copa-stat-num">48</div><div class="copa-stat-lbl">Seleções</div></div>
+        <div class="copa-stat-card"><div class="copa-stat-num">12</div><div class="copa-stat-lbl">Grupos</div></div>
+        <div class="copa-stat-card"><div class="copa-stat-num">16</div><div class="copa-stat-lbl">Cidades</div></div>
+        <div class="copa-stat-card"><div class="copa-stat-num">104</div><div class="copa-stat-lbl">Jogos</div></div>
+      </div>
+      <div class="copa-smartview-banner">
+        <div class="copa-sv-left">
+          <div class="copa-sv-hexa">🏆 SmartView torce pelo Hexa!</div>
+          <div class="copa-sv-sub">O Brasil inteiro na torcida pelo Hexa 🇧🇷</div>
+        </div>
+        <div>
+          <div class="copa-sv-brand">Smart<span>View</span></div>
+          <div class="copa-sv-url">smartviewtech.com.br</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #vp -->
+
+<script>
+// ── Zoom ──
+var ZOOM_KEY = 'sv_zoom';
+var currentZoom = 1;
+function applyZoom(z) {
+  currentZoom = Math.round(z*100)/100;
+  document.getElementById('vp').style.zoom = currentZoom;
+  document.getElementById('scale-val').textContent = Math.round(currentZoom*100)+'%';
+  try { localStorage.setItem(ZOOM_KEY, currentZoom); } catch(e) {}
+}
+(function(){ var s; try{s=parseFloat(localStorage.getItem(ZOOM_KEY));}catch(e){} if(s&&s>0.3&&s<3) applyZoom(s); })();
+
+function goFullscreen() {
+  var el=document.documentElement;
+  var p=el.requestFullscreen?el.requestFullscreen():el.webkitRequestFullscreen?(el.webkitRequestFullscreen(),null):null;
+  if(p&&p.catch) p.catch(function(){});
+}
+
+var panelOpen=false;
+document.getElementById('scale-toggle').addEventListener('click',function(){ panelOpen=!panelOpen; document.getElementById('scale-panel').className=panelOpen?'open':''; });
+document.getElementById('sc-plus').addEventListener('click', function(){ applyZoom(Math.min(3,currentZoom+0.05)); });
+document.getElementById('sc-minus').addEventListener('click',function(){ applyZoom(Math.max(0.3,currentZoom-0.05)); });
+document.getElementById('sc-auto').addEventListener('click', function(){ applyZoom(1.0); });
+document.querySelectorAll('.sc-preset').forEach(function(el){ el.addEventListener('click',function(){ applyZoom(parseFloat(el.getAttribute('data-z'))); }); });
+var hideTimer;
+document.getElementById('scale-controls').addEventListener('mouseenter',function(){ clearTimeout(hideTimer); });
+document.getElementById('scale-controls').addEventListener('mouseleave',function(){ hideTimer=setTimeout(function(){ panelOpen=false; document.getElementById('scale-panel').className=''; },6000); });
+
+// ── Relógio ──
+var DIAS  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+var MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function pad(n){ return n<10?'0'+n:''+n; }
+function getSPParts() {
+  var now=new Date();
+  try {
+    var fmt=new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hour12:false});
+    var parts={};
+    fmt.formatToParts(now).forEach(function(p){ parts[p.type]=parseInt(p.value)||0; });
+    var h=parts.hour===24?0:parts.hour;
+    var spDate=new Date(parts.year,parts.month-1,parts.day);
+    return {h:h,m:parts.minute,dow:spDate.getDay(),date:parts.day,month:parts.month-1};
+  } catch(e) {
+    var sp=new Date(Date.now()-3*3600000);
+    return {h:sp.getUTCHours(),m:sp.getUTCMinutes(),dow:sp.getUTCDay(),date:sp.getUTCDate(),month:sp.getUTCMonth()};
+  }
+}
+function tick() {
+  try {
+    var t=getSPParts();
+    document.getElementById('clock').textContent=pad(t.h)+':'+pad(t.m);
+    document.getElementById('clock-date').textContent=DIAS[t.dow]+', '+t.date+' de '+MESES[t.month];
+  } catch(e) {}
+}
+tick(); setInterval(tick,1000);
+
+// ── Clima ──
+function wmoDesc(c){ if(c===0)return'Céu limpo';if(c<=3)return'Parcialmente nublado';if(c<=48)return'Nevoeiro';if(c<=57)return'Garoa';if(c<=67)return'Chuva';if(c<=82)return'Pancadas';return'Tempestade'; }
+function wmoIcon(c){ if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=48)return'🌫️';if(c<=67)return'🌧️';if(c<=82)return'🌦️';return'⛈️'; }
+function fetchWeather() {
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.61&longitude=-46.65&current=temperature_2m,relative_humidity_2m,weathercode&timezone=America%2FSao_Paulo')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var c=d.current;
+      document.getElementById('w-temp').textContent=Math.round(c.temperature_2m)+'°C';
+      document.getElementById('w-hum').textContent=c.relative_humidity_2m+'%';
+      document.getElementById('w-desc').textContent=wmoDesc(c.weathercode);
+      document.querySelector('#weather .w-icon').textContent=wmoIcon(c.weathercode);
+      document.getElementById('weather').style.display='flex';
+    })
+    .catch(function(){ document.getElementById('weather').style.display='flex'; });
+}
+fetchWeather(); setInterval(fetchWeather,10*60*1000);
+
+// ── QR — cache offline em localStorage ──
+function qrCacheKey(url){ return 'sv_qr_'+btoa(unescape(encodeURIComponent(url))).slice(0,40); }
+function setQR(imgEl,url) {
+  if(!url) return;
+  var box=imgEl.parentNode; if(box) box.style.visibility='';
+  var cached=null; try{ cached=localStorage.getItem(qrCacheKey(url)); }catch(e){}
+  if(cached){ imgEl.src=cached; return; }
+  var enc=encodeURIComponent(url);
+  imgEl.src='https://api.qrserver.com/v1/create-qr-code/?size=440x440&data='+enc;
+  fetch('https://api.qrserver.com/v1/create-qr-code/?size=440x440&data='+enc)
+    .then(function(r){ return r.blob(); })
+    .then(function(blob){
+      var reader=new FileReader();
+      reader.onload=function(){ try{ localStorage.setItem(qrCacheKey(url),reader.result); }catch(e){} imgEl.src=reader.result; };
+      reader.readAsDataURL(blob);
+    })
+    .catch(function(){ imgEl.src='https://chart.googleapis.com/chart?cht=qr&chs=440x440&chl='+enc; });
+}
+
+// ── Configuração ──
+var API_BASE='https://admin.smartviewtech.com.br';
+
+(function(){
+  var fromUrl=new URLSearchParams(window.location.search).get('code')||(window.location.hash?window.location.hash.replace('#',''):'');
+  if(fromUrl){ sessionStorage.setItem('sv_code',fromUrl); if(window.history&&window.history.replaceState) window.history.replaceState({},'',window.location.pathname); }
+})();
+var VITRINE_CODE=sessionStorage.getItem('sv_code')||'';
+
+var PORTAL_URL='https://portal.smartviewtech.com.br';
+var SLIDE_MS=12000;
+var stores=[]; var current=0; var slideTimer=null; var progTimer=null;
+var progStart=0; var progRaf=null;
+
+var CATS={
+  mercado:'🛒 Mercado',supermercado:'🛒 Supermercado',farmacia:'💊 Farmácia',
+  padaria:'🍞 Padaria',restaurante:'🍽️ Restaurante',lanchonete:'🍔 Lanchonete',
+  pizzaria:'🍕 Pizzaria',acougue:'🥩 Açougue',petshop:'🐾 Pet Shop',
+  salao:'💇 Salão',barbearia:'✂️ Barbearia',academia:'💪 Academia',
+  clinica:'🏥 Clínica',odonto:'🦷 Odontologia',auto:'🔧 Auto',
+  eletro:'⚡ Eletrônicos',moda:'👗 Moda',calcados:'👟 Calçados',
+  moveis:'🛋️ Móveis',papelaria:'📚 Papelaria',floricultura:'🌸 Floricultura',
+  bar:'🍺 Bar',sorvete:'🍦 Sorveteria',outros:'🏪 Comércio',
+};
+var BG=['bg-0','bg-1','bg-2','bg-3','bg-4','bg-5','bg-6','bg-7'];
+
+function normalizeStore(raw,idx) {
+  var promo=raw.promotion||{};
+  return {
+    id:'store-'+idx, name:raw.name||'', description:raw.description||'',
+    category:raw.category||'outros', address:raw.address||'',
+    phone:raw.phone||'', whatsapp:raw.whatsapp||'',
+    logo:raw.logo||'', vitrineBg:raw.photo_vitrine||'',
+    photos:raw.photo_vitrine?[raw.photo_vitrine]:[],
+    link_qrcode:raw.link_qrcode||PORTAL_URL,
+    promotions:promo.exists&&promo.phrase?[{title:promo.phrase,description:''}]:[],
+    coupon:null,
+  };
+}
+
+// ── API ──
+function apiFetchVitrine() {
+  return fetch(API_BASE+'/api/v1/vitrine?code='+VITRINE_CODE,{headers:{'Authorization':'Bearer '+VITRINE_CODE,'Accept':'application/json'}})
+    .then(function(r){
+      if(r.status===401) throw new Error('Código inválido');
+      if(r.status===404) throw new Error('Vitrine não encontrada');
+      if(!r.ok) throw new Error('Erro '+r.status);
+      return r.json();
+    });
+}
+
+// ── Cache offline ──
+var CACHE_KEY='sv_vitrine_'+(VITRINE_CODE||'default');
+function saveCache(d){ try{ localStorage.setItem(CACHE_KEY,JSON.stringify(d)); }catch(e){} }
+function loadCache(){ try{ var d=localStorage.getItem(CACHE_KEY); return d?JSON.parse(d):null; }catch(e){ return null; } }
+function preloadImages(list){ list.forEach(function(s){ if(s.photo_vitrine){new Image().src=s.photo_vitrine;} if(s.logo){new Image().src=s.logo;} }); }
+
+function applyVitrineData(data,isFirst) {
+  saveCache(data); preloadImages(data.stores||[]);
+  stores=(data.stores||[]).map(normalizeStore).filter(function(s){ return s.name; });
+  var tickerEl=document.getElementById('ticker-text');
+  if(tickerEl&&data.rodape_msgs&&data.rodape_msgs.length) tickerEl.textContent=data.rodape_msgs.join('   •   ');
+  if(isFirst) init(); else if(current>=stores.length) current=0;
+}
+
+// ── Polling 2x/dia ──
+function startPolling() {
+  setInterval(function(){
+    apiFetchVitrine().then(function(d){ applyVitrineData(d,false); }).catch(function(){});
+  },43200000);
+}
+
+function fetchStores() {
+  if(!API_BASE||!VITRINE_CODE){ fetchFromFirestore(); return; }
+  apiFetchVitrine()
+    .then(function(d){ applyVitrineData(d,true); startPolling(); })
+    .catch(function(){
+      var cached=loadCache();
+      if(cached){
+        applyVitrineData(cached,true);
+        var retry=setInterval(function(){
+          apiFetchVitrine().then(function(d){ clearInterval(retry); applyVitrineData(d,false); startPolling(); }).catch(function(){});
+        },43200000);
+      } else { fetchFromFirestore(); }
+    });
+}
+
+// ── Firestore fallback ──
+function fetchFromFirestore() {
+  var pid='smartsjc-c0882';
+  fetch('https://firestore.googleapis.com/v1/projects/'+pid+'/databases/(default)/documents:runQuery',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({structuredQuery:{from:[{collectionId:'stores'}],where:{compositeFilter:{op:'AND',filters:[
+      {fieldFilter:{field:{fieldPath:'plan'},op:'EQUAL',value:{stringValue:'premium'}}},
+      {fieldFilter:{field:{fieldPath:'active'},op:'EQUAL',value:{booleanValue:true}}}
+    ]}}}})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    stores=data.filter(function(i){ return i.document; }).map(function(i){
+      var f=i.document.fields||{};
+      var id=i.document.name.split('/').pop();
+      function str(k){ return f[k]&&f[k].stringValue||''; }
+      var photos=[]; if(f.photos&&f.photos.arrayValue&&f.photos.arrayValue.values) f.photos.arrayValue.values.forEach(function(v){ var s=v.stringValue||(v.mapValue&&v.mapValue.fields&&v.mapValue.fields.url&&v.mapValue.fields.url.stringValue)||''; if(s) photos.push(s); });
+      var promos=[]; if(f.promotions&&f.promotions.arrayValue&&f.promotions.arrayValue.values) f.promotions.arrayValue.values.forEach(function(v){ var mf=v.mapValue&&v.mapValue.fields; if(mf) promos.push({title:mf.title&&mf.title.stringValue||'',description:mf.description&&mf.description.stringValue||''}); });
+      var coupon=null; if(f.coupon&&f.coupon.mapValue&&f.coupon.mapValue.fields){ var cf=f.coupon.mapValue.fields; coupon={active:!!(cf.active&&cf.active.booleanValue),code:cf.code&&cf.code.stringValue||''}; }
+      return {id:id,name:str('name'),description:str('description'),category:str('category')||'outros',address:str('address'),phone:str('phone'),whatsapp:str('whatsapp'),logo:str('logo'),vitrineBg:str('vitrineBg'),photos:photos,promotions:promos,coupon:coupon,link_qrcode:PORTAL_URL+'/loja/'+id+'?src=qr'};
+    }).filter(function(s){ return s.name; });
+    init();
+  })
+  .catch(function(){ init(); });
+}
+
+function init() {
+  document.getElementById('loading').style.display='none';
+  if(!stores.length){ document.getElementById('empty').style.display='flex'; setQR(document.getElementById('empty-qr'),PORTAL_URL); return; }
+  var items=['Bem-vindo ao SmartView — o portal digital de São João Clímaco','Cadastre sua loja no portal e veja nossos planos','Plano Premium: apareça nas telas do bairro por R$59,90/mês','Acesse o portal pelo QR code e descubra os melhores comércios'];
+  stores.forEach(function(s){ items.push(s.name+(s.address?' — '+s.address:' — São João Clímaco, SP')); });
+  document.getElementById('ticker-text').textContent=items.join('   •   ');
+  var dotsEl=document.getElementById('dots'); dotsEl.innerHTML='';
+  stores.forEach(function(_,i){ var d=document.createElement('div'); d.className='dot'+(i===0?' active':''); d.style.width=i===0?'2.5vw':'1.2vw'; dotsEl.appendChild(d); });
+  var pt=document.createElement('div'); pt.className='progress-track'; pt.innerHTML='<div id="progress-bar"></div>'; dotsEl.appendChild(pt);
+  document.getElementById('slide').style.display='flex';
+  renderSlide(0,false); scheduleNext();
+}
+
+function fitStoreName(el) {
+  var steps=[4.2,3.5,2.9,2.4];
+  for(var i=0;i<steps.length;i++){ el.style.fontSize=steps[i]+'vw'; if(el.scrollHeight<=el.clientHeight+4) break; }
+}
+
+// ── Progress bar via CSS transition (sem setInterval) ──
+function startProgressBar() {
+  cancelAnimationFrame(progRaf); clearInterval(progTimer);
+  var bar=document.getElementById('progress-bar');
+  if(!bar) return;
+  bar.style.transition='none'; bar.style.width='0%';
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      bar.style.transition='width '+SLIDE_MS+'ms linear';
+      bar.style.width='100%';
+    });
+  });
+}
+
+function renderSlide(idx,animate) {
+  var s=stores[idx];
+  var el=document.getElementById('slide'); var main=document.getElementById('main');
+  BG.forEach(function(c){ el.classList.remove(c); }); el.classList.add(BG[idx%BG.length]);
+  var pe=document.getElementById('slide-photo'),oe=document.getElementById('slide-overlay');
+  var bg=s.vitrineBg||s.photos[0]||'';
+  if(bg){ pe.src=bg; pe.style.display='block'; oe.style.display='block'; }
+  else  { pe.style.display='none'; oe.style.display='none'; }
+  var le=document.getElementById('store-logo');
+  if(s.logo){ le.src=s.logo; le.alt=s.name; le.style.display='block'; } else le.style.display='none';
+  document.getElementById('store-category').textContent=CATS[s.category]||CATS['outros'];
+  var nameEl=document.getElementById('store-name'); nameEl.textContent=s.name; fitStoreName(nameEl);
+  document.getElementById('store-desc').textContent=s.description;
+  var ce=document.getElementById('store-coupon'),pre=document.getElementById('store-promo');
+  if(s.coupon&&s.coupon.active){ ce.style.display='block'; pre.style.display='none'; }
+  else if(s.promotions&&s.promotions[0]&&s.promotions[0].title){ ce.style.display='none'; pre.style.display='block'; document.getElementById('promo-title').textContent=s.promotions[0].title; document.getElementById('promo-desc').textContent=s.promotions[0].description||''; }
+  else { ce.style.display='none'; pre.style.display='none'; }
+  var meta=[]; if(s.address) meta.push('<span>📍 '+s.address+'</span>'); if(s.phone) meta.push('<span>📞 '+s.phone+'</span>'); if(s.whatsapp) meta.push('<span>💬 '+s.whatsapp+'</span>');
+  document.getElementById('store-meta').innerHTML=meta.join('');
+  setQR(document.getElementById('store-qr'),s.link_qrcode||PORTAL_URL);
+  document.getElementById('dots').querySelectorAll('.dot').forEach(function(d,i){ d.classList.toggle('active',i===idx); d.style.width=i===idx?'2.5vw':'1.2vw'; });
+  if(animate){ main.style.opacity='0'; main.style.transform='translateY(16px)'; main.style.transition='none'; requestAnimationFrame(function(){ requestAnimationFrame(function(){ main.style.transition='opacity 0.6s ease,transform 0.6s ease'; main.style.opacity='1'; main.style.transform='translateY(0)'; }); }); }
+  else { main.style.transition='none'; main.style.opacity='1'; main.style.transform='translateY(0)'; }
+  startProgressBar();
+}
+
+function nextSlide(){ current=(current+1)%stores.length; renderSlide(current,true); }
+function scheduleNext(){ clearTimeout(slideTimer); slideTimer=setTimeout(function(){ nextSlide(); scheduleNext(); },SLIDE_MS); }
+
+var firstClick=true;
+document.addEventListener('click',function(e){
+  if(document.getElementById('scale-controls').contains(e.target)) return;
+  if(firstClick){ firstClick=false; goFullscreen(); return; }
+  if(!stores.length||copaActive) return;
+  clearTimeout(slideTimer); nextSlide(); scheduleNext();
+});
+document.addEventListener('dblclick',function(){ goFullscreen(); });
+if('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(function(){});
+setQR(document.getElementById('sv-qr'),PORTAL_URL);
+
+// ── Copa do Mundo 2026 — timers isolados ──
+var COPA_DATE=new Date('2026-06-11T12:00:00-03:00');
+var copaActive=false; var copaTimerA=null; var copaTimerB=null; var copaCountIv=null;
+
+var BRASIL_JOGOS=[
+  {rodada:'1º Jogo',data:'13 JUN • SAB',hora:'19h00',adversario:'🇲🇦 Marrocos',local:'MetLife Stadium, Nova Jersey'},
+  {rodada:'2º Jogo',data:'19 JUN • SEX',hora:'21h30',adversario:'🇭🇹 Haiti',   local:'Lincoln Financial Field, Filadélfia'},
+  {rodada:'3º Jogo',data:'24 JUN • QUA',hora:'19h00',adversario:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escócia',local:'Hard Rock Stadium, Miami'},
+];
+
+function updateCopaTimer() {
+  var el=document.getElementById('copa-timer'); if(!el) return;
+  var diff=COPA_DATE-new Date();
+  if(diff<=0){ el.textContent='A COPA ESTÁ ACONTECENDO! ⚽🔴'; return; }
+  var d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000);
+  el.textContent=d+' DIAS • '+pad(h)+'h • '+pad(m)+'m';
+}
+
+function buildJogosHTML() {
+  var el=document.getElementById('copa-b-games'); if(!el) return;
+  el.innerHTML=BRASIL_JOGOS.map(function(j,i){
+    return '<div class="copab-game">'+
+      '<div class="copab-game-top"><span class="copab-rodada">'+j.rodada+'</span><span class="copab-num">#'+(i+1)+'</span></div>'+
+      '<div class="copab-game-body">'+
+        '<div class="copab-data">'+j.data+'</div>'+
+        '<div class="copab-hora">'+j.hora+' <small>BRT</small></div>'+
+        '<div class="copab-matchup">🇧🇷 Brasil <span class="copab-vs">vs</span> '+j.adversario+'</div>'+
+        '<div class="copab-local">📍 '+j.local+'</div>'+
+      '</div></div>';
+  }).join('');
+}
+
+function showCopaSlide() {
+  if(copaActive||!stores.length) return;
+  copaActive=true;
+  clearTimeout(slideTimer); clearInterval(progTimer);
+  // Para a progress bar CSS
+  var bar=document.getElementById('progress-bar'); if(bar){ bar.style.transition='none'; bar.style.width='0%'; }
+
+  var cvA=document.getElementById('copa-view');
+  cvA.classList.add('show');
+  updateCopaTimer();
+  copaCountIv=setInterval(updateCopaTimer,10000);
+
+  copaTimerA=setTimeout(function(){
+    clearInterval(copaCountIv);
+    cvA.classList.remove('show');
+    var cvB=document.getElementById('copa-view-b');
+    buildJogosHTML();
+    cvB.classList.add('show');
+    copaTimerB=setTimeout(function(){
+      cvB.classList.remove('show');
+      copaActive=false;
+      renderSlide(current,true);
+      scheduleNext();
+    },15000);
+  },13000);
+}
+
+setInterval(function(){ showCopaSlide(); },60000);
+
+fetchStores();
+</script>
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SmartView — Em breve</title>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4M20TWCYP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-N4M20TWCYP', {
+    page_title: 'Lançamento SmartView',
+    page_location: 'https://www.smartviewtech.com.br/lancamento'
+  });
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --teal:   #00c896;
+    --teal2:  #00a07a;
+    --orange: #f97316;
+    --navy:   #0b1e35;
+    --navy2:  #0d2640;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--navy);
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+  }
+
+  /* ─── Slides ─── */
+  .slide {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 64px;
+    opacity: 0;
+    transition: opacity 0.55s ease;
+    pointer-events: none;
+    z-index: 1;
+    will-change: opacity;
+    transform: translateZ(0);
+    overflow-y: auto;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 3;
+  }
+
+  /* ─── Background gradients per slide ─── */
+  .s1 { background: radial-gradient(ellipse at 20% 50%, #063d2a 0%, var(--navy) 65%); }
+  .s2 { background: radial-gradient(ellipse at 80% 30%, #1a2e10 0%, var(--navy) 65%); }
+  .s3 { background: radial-gradient(ellipse at 30% 70%, #2a1800 0%, var(--navy) 65%); }
+  .s4 { background: radial-gradient(ellipse at 60% 40%, #063d2a 0%, var(--navy) 65%); }
+
+  /* ─── Grid pattern overlay ─── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,150,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,150,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ─── Progress bar ─── */
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 5px;
+    background: var(--teal);
+    box-shadow: 0 0 12px rgba(0,200,150,0.6);
+    z-index: 100;
+    transition: width linear;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* ─── Slide indicators ─── */
+  .indicators {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transition: all 0.4s;
+  }
+  .dot.on { background: var(--teal); width: 24px; border-radius: 4px; }
+
+  /* ─── Logo ─── */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .logo img { height: 52px; }
+  .logo-name {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff, var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ─── Slide 1: Teaser ─── */
+  .teaser-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,200,150,0.12);
+    border: 1px solid rgba(0,200,150,0.35);
+    color: #6effd4;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 8px 24px;
+    border-radius: 50px;
+    margin-bottom: 32px;
+  }
+  .teaser-title {
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 1.05;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .teaser-title .hl {
+    background: linear-gradient(135deg, var(--teal), #6effd4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .teaser-sub {
+    font-size: 22px;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  /* Countdown */
+  .countdown {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .cbox {
+    text-align: center;
+    background: rgba(0,200,150,0.08);
+    border: 1px solid rgba(0,200,150,0.2);
+    border-radius: 20px;
+    padding: 20px 28px;
+    min-width: 100px;
+  }
+  .cbox .num {
+    font-size: 56px;
+    font-weight: 900;
+    color: var(--teal);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cbox .lbl {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+  .csep {
+    font-size: 40px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.2);
+    align-self: flex-start;
+    margin-top: 16px;
+  }
+  .launch-date {
+    margin-top: 28px;
+    font-size: 16px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 2px;
+  }
+  .launch-date strong { color: rgba(255,255,255,0.7); }
+
+  /* ─── Slide 2: Lojista ─── */
+  .lojista-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    width: 100%;
+    max-width: 1100px;
+    align-items: center;
+  }
+  .lojista-left .eyebrow {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 16px;
+  }
+  .lojista-title {
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .lojista-title span { color: var(--teal); }
+  .lojista-desc {
+    font-size: 18px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+  .lojista-right {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .benefit {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+  .benefit-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .benefit h3 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .benefit p  { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+  /* ─── Slide 3: Planos ─── */
+  .plans-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 900px;
+  }
+  .plan {
+    border-radius: 24px;
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .plan-basic {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .plan-premium {
+    background: linear-gradient(135deg, rgba(0,200,150,0.12), rgba(0,160,120,0.08));
+    border: 2px solid rgba(0,200,150,0.35);
+  }
+  .plan-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+  }
+  .plan-pill.basic { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+  .plan-pill.premium { background: rgba(0,200,150,0.18); color: #6effd4; }
+  .plan-tagline { font-size: 15px; color: rgba(255,255,255,0.5); margin-bottom: 20px; line-height: 1.5; }
+  .plan-price { margin-bottom: 6px; }
+  .plan-price .free { font-size: 52px; font-weight: 900; color: #4ade80; line-height: 1; }
+  .plan-price .free-sub { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+  .plan-price .amount { font-size: 52px; font-weight: 900; line-height: 1; }
+  .plan-price .old { font-size: 14px; color: rgba(255,255,255,0.25); text-decoration: line-through; margin-left: 6px; }
+  .plan-price .mo { font-size: 15px; color: rgba(255,255,255,0.45); }
+  .plan-promo { font-size: 11px; color: #4ade80; font-weight: 700; margin-top: 6px; }
+  .plan-list { list-style: none; margin-top: 20px; }
+  .plan-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 14px;
+    color: rgba(255,255,255,0.75);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .plan-list li:last-child { border: none; }
+  .plan-list .ck { color: var(--teal); font-size: 16px; }
+
+  /* ─── Slide 4: CTA / Saiba mais ─── */
+  .cta-wrap {
+    text-align: center;
+    max-width: 900px;
+  }
+  .cta-wrap .big {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .cta-wrap .big span {
+    background: linear-gradient(135deg, var(--teal), #6effd4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .cta-wrap .sub {
+    font-size: 20px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 48px;
+    line-height: 1.6;
+  }
+  .cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px;
+  }
+  .qr-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    width: 160px; height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 40px rgba(0,200,150,0.3);
+  }
+  .qr-box img { width: 128px; height: 128px; }
+  .contact-info {
+    text-align: left;
+  }
+  .contact-info .line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .contact-info .ico {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .ico-green { background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.3); }
+  .ico-teal  { background: rgba(0,200,150,0.15);  border: 1px solid rgba(0,200,150,0.3); }
+  .contact-info .label { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 2px; letter-spacing: 1px; text-transform: uppercase; }
+  .contact-info .value { font-size: 22px; font-weight: 800; color: #fff; }
+  .contact-info .value.teal { color: var(--teal); }
+
+  /* ─── Pulsing dot ─── */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+
+  /* ─── Slide-in animation (only transform, no opacity — parent handles crossfade) ─── */
+  @keyframes slideIn {
+    from { transform: translateY(18px); }
+    to   { transform: translateY(0); }
+  }
+  .slide.active > * {
+    animation: slideIn 0.55s ease-out both;
+  }
+  .slide.active > *:nth-child(2) { animation-delay: 0.07s; }
+  .slide.active > *:nth-child(3) { animation-delay: 0.14s; }
+  .slide.active > *:nth-child(4) { animation-delay: 0.21s; }
+
+  /* ─── Glow accent ─── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-teal { background: rgba(0,200,150,0.12); width: 400px; height: 400px; top: -100px; right: -100px; }
+  .glow-orange { background: rgba(249,115,22,0.1); width: 300px; height: 300px; bottom: -80px; left: 0; }
+
+  /* Print/fullscreen hint gone */
+  * { -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  /* ─── RESPONSIVO ─── */
+
+  /* Fontes fluidas com clamp() */
+  .teaser-title  { font-size: clamp(28px, 5.5vw, 72px); }
+  .teaser-sub    { font-size: clamp(14px, 2vw,   22px); }
+  .teaser-badge  { font-size: clamp(11px, 1.2vw, 13px); }
+  .cbox .num     { font-size: clamp(28px, 4.5vw, 56px); }
+  .csep          { font-size: clamp(24px, 3.5vw, 40px); }
+  .logo-name     { font-size: clamp(20px, 3vw,   36px); }
+  .lojista-title { font-size: clamp(24px, 4vw,   52px); }
+  .lojista-desc  { font-size: clamp(13px, 1.6vw, 18px); }
+  .benefit h3    { font-size: clamp(13px, 1.3vw, 15px); }
+  .benefit p     { font-size: clamp(11px, 1.1vw, 13px); }
+  .plan-price .amount { font-size: clamp(32px, 4.5vw, 52px); }
+  .plan-price .free   { font-size: clamp(32px, 4.5vw, 52px); }
+  .cta-wrap .big { font-size: clamp(28px, 5vw,   64px); }
+  .cta-wrap .sub { font-size: clamp(14px, 1.8vw, 20px); }
+  .contact-info .value { font-size: clamp(16px, 2vw, 22px); }
+
+  /* Slide padding fluido */
+  .slide { padding: clamp(20px, 4vw, 64px) clamp(16px, 5vw, 64px); }
+
+  /* Tablet — colapsa grids para coluna única */
+  @media (max-width: 900px) {
+    .lojista-layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      overflow-y: auto;
+      max-height: 85vh;
+    }
+    .lojista-left .lojista-desc { margin-bottom: 16px; }
+    .lojista-right { gap: 10px; }
+    .benefit { padding: 12px 14px; }
+    .benefit-icon { font-size: 22px; }
+
+    .plans-row {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      overflow-y: auto;
+      max-height: 70vh;
+    }
+    .plan { padding: 22px 20px; }
+    .plan-list li { font-size: 13px; padding: 6px 0; }
+
+    .cta-row {
+      flex-direction: column;
+      gap: 24px;
+      align-items: center;
+    }
+    .contact-info { text-align: center; }
+    .contact-info .line { justify-content: center; }
+    .qr-box { width: 130px; height: 130px; }
+    .qr-box img { width: 100px; height: 100px; }
+
+    .countdown { gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .cbox { padding: 14px 18px; min-width: 72px; }
+    .csep { margin-top: 10px; }
+
+    .logo img { height: 36px; }
+  }
+
+  /* Mobile pequeno */
+  @media (max-width: 540px) {
+    .lojista-layout { gap: 16px; }
+    .plans-row { gap: 10px; }
+    .cbox { padding: 10px 12px; min-width: 60px; border-radius: 12px; }
+    .launch-date { font-size: 13px; }
+    .teaser-badge { padding: 6px 16px; letter-spacing: 2px; margin-bottom: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SLIDE 1 — TEASER COUNTDOWN ══ -->
+<div class="slide s1 active" id="s1">
+  <div class="glow glow-teal"></div>
+  <div class="glow glow-orange"></div>
+  <div class="logo">
+    <img src="LOGO.png" alt="SmartView">
+  </div>
+  <div class="teaser-badge">
+    <span class="pulse" style="width:8px;height:8px;background:var(--teal);border-radius:50%;display:inline-block;"></span>
+    Em breve · São João Clímaco
+  </div>
+  <div class="teaser-title">
+    Uma novidade em<br><span class="hl">marketing digital</span><br>chega ao bairro
+  </div>
+  <div class="teaser-sub">Conectando moradores e comércios como nunca foi feito antes</div>
+  <div class="countdown">
+    <div class="cbox"><div class="num" id="cd-d">--</div><div class="lbl">dias</div></div>
+    <div class="csep">:</div>
+    <div class="cbox"><div class="num" id="cd-h">--</div><div class="lbl">horas</div></div>
+    <div class="csep">:</div>
+    <div class="cbox"><div class="num" id="cd-m">--</div><div class="lbl">min</div></div>
+    <div class="csep">:</div>
+    <div class="cbox"><div class="num" id="cd-s">--</div><div class="lbl">seg</div></div>
+  </div>
+  <div class="launch-date">Lançamento oficial: <strong>08 de maio de 2026</strong></div>
+</div>
+
+<!-- ══ SLIDE 2 — LOJISTA ══ -->
+<div class="slide s2" id="s2">
+  <div class="glow glow-teal" style="right:auto;left:-80px;top:50px;"></div>
+  <div class="lojista-layout">
+    <div class="lojista-left">
+      <div class="eyebrow">Para você, lojista</div>
+      <div class="lojista-title">Seu negócio na<br><span>tela de todo<br>morador</span></div>
+      <div class="lojista-desc">
+        Se você tem um comércio em São João Clímaco, chegou a hora de aparecer de verdade — sem pagar caro, sem complicação.
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.25);border-radius:12px;padding:12px 18px;font-size:14px;color:#6effd4;font-weight:600;">
+        🏅 Promo Fundador · Vagas limitadas · Lançamento 08/05
+      </div>
+    </div>
+    <div class="lojista-right">
+      <div class="benefit">
+        <div class="benefit-icon">📱</div>
+        <div>
+          <h3>Perfil completo no portal digital</h3>
+          <p>Foto, promoções, WhatsApp direto e QR code exclusivo da sua loja</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">📺</div>
+        <div>
+          <h3>Anúncio nas telas do bairro</h3>
+          <p>Telas em pontos estratégicos e em carros circulando pela região</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">💰</div>
+        <div>
+          <h3>Preço justo, sem surpresas</h3>
+          <p>Plano Basic gratuito na promo. Premium a partir de R$59,90/mês</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon">🤝</div>
+        <div>
+          <h3>Suporte total de pós-venda</h3>
+          <p>Equipe presente para te ajudar em cada etapa, do cadastro à divulgação</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 3 — PLANOS ══ -->
+<div class="slide s3" id="s3">
+  <div class="glow glow-orange" style="right:-60px;bottom:auto;top:-60px;left:auto;"></div>
+  <div class="logo" style="margin-bottom:20px;">
+    <img src="LOGO.png" alt="SmartView">
+  </div>
+  <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:8px;">Promo de Fundador</div>
+  <div style="font-size:40px;font-weight:900;text-align:center;margin-bottom:6px;">Garante sua vaga agora</div>
+  <div style="font-size:16px;color:rgba(255,255,255,0.45);margin-bottom:32px;text-align:center;">Valores congelados por 12 meses · Lançamento 08/05/2026</div>
+  <div class="plans-row">
+    <div class="plan plan-basic">
+      <div class="plan-pill basic">Plano Basic</div>
+      <div class="plan-tagline">Sua loja no portal digital do bairro</div>
+      <div class="plan-price">
+        <div class="free">GRÁTIS</div>
+        <div class="free-sub">Promo Fundador · após: R$19,90/mês</div>
+      </div>
+      <ul class="plan-list">
+        <li><span class="ck">✓</span> Perfil completo no portal</li>
+        <li><span class="ck">✓</span> Fotos, promoções e cupons</li>
+        <li><span class="ck">✓</span> Botão WhatsApp direto</li>
+        <li><span class="ck">✓</span> QR code exclusivo</li>
+      </ul>
+    </div>
+    <div class="plan plan-premium">
+      <div class="plan-pill premium">⚡ Plano Premium</div>
+      <div class="plan-tagline">Portal + anúncio nas telas físicas e carros do bairro</div>
+      <div class="plan-price">
+        <span class="amount">R$59<span style="font-size:28px;">,90</span></span>
+        <span class="mo">/mês</span>
+        <span class="old">R$79,90</span>
+        <div class="plan-promo">🎉 Garantido por 12 meses sem reajuste</div>
+      </div>
+      <ul class="plan-list">
+        <li><span class="ck">✓</span> Tudo do Basic +</li>
+        <li><span class="ck">✓</span> Telas físicas no bairro</li>
+        <li><span class="ck">✓</span> 🚗 Telas em carros na região</li>
+        <li><span class="ck">✓</span> Destaque nas buscas</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 4 — SAIBA MAIS / CTA ══ -->
+<div class="slide s4" id="s4">
+  <div class="glow glow-teal" style="top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;"></div>
+  <div class="cta-wrap">
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--teal);margin-bottom:16px;">Saiba mais</div>
+    <div class="big">Quer fazer parte<br>do <span>lançamento</span>?</div>
+    <div class="sub">Entre em contato antes do dia 08/05 e garanta<br>sua vaga na Promo Fundador com condições exclusivas.</div>
+    <div class="cta-row">
+      <div style="text-align:center;">
+        <div class="qr-box">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=https://wa.me/5511924962727?text=Ol%C3%A1%21%20Vi%20o%20an%C3%BAncio%20do%20SmartView%20e%20quero%20saber%20mais%20sobre%20como%20anunciar%20meu%20neg%C3%B3cio%20no%20bairro%20%F0%9F%9A%80" alt="QR Code WhatsApp" />
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:10px;">Escaneie para falar no WhatsApp</div>
+      </div>
+      <div class="contact-info">
+        <div class="line">
+          <div class="ico ico-green">💬</div>
+          <div>
+            <div class="label">WhatsApp</div>
+            <div class="value">(11) 9 2496-2727</div>
+          </div>
+        </div>
+        <div class="line">
+          <div class="ico ico-teal">🌐</div>
+          <div>
+            <div class="label">Portal</div>
+            <div class="value teal">www.smartviewtech.com.br</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.2);border-radius:14px;padding:14px 18px;">
+          <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:4px;">Lançamento oficial</div>
+          <div style="font-size:28px;font-weight:900;color:var(--teal);">08 de Maio de 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INDICADORES ══ -->
+<div class="indicators">
+  <div class="dot on" id="dot0"></div>
+  <div class="dot"    id="dot1"></div>
+  <div class="dot"    id="dot2"></div>
+  <div class="dot"    id="dot3"></div>
+</div>
+
+<!-- ══ BARRA DE PROGRESSO ══ -->
+<div class="progress-bar" id="pgbar" style="width:0%"></div>
+
+<script>
+  // ── Countdown ──
+  const LAUNCH = new Date('2026-05-08T08:00:00');
+  function updateClock() {
+    const now  = new Date();
+    const diff = Math.max(0, LAUNCH - now);
+    if (diff === 0) {
+      window.location.href = 'https://www.smartviewtech.com.br/vitrine.html?code=SVRKH6BYIK';
+      return;
+    }
+    const d = Math.floor(diff / 864e5);
+    const h = Math.floor((diff % 864e5) / 36e5);
+    const m = Math.floor((diff % 36e5)  / 6e4);
+    const s = Math.floor((diff % 6e4)   / 1e3);
+    document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
+    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+    document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── Slide loop ──
+  const SLIDES   = ['s1','s2','s3','s4'];
+  const DURATIONS = [10, 10, 11, 12]; // seconds each slide
+  let current = 0;
+  let startTime, animFrame, barTimer;
+
+  const SLIDE_NAMES = ['Teaser Countdown', 'Para Lojistas', 'Planos e Preços', 'Contato e QR Code'];
+
+  function showSlide(idx) {
+    SLIDES.forEach((id, i) => {
+      document.getElementById(id).classList.toggle('active', i === idx);
+    });
+    SLIDES.forEach((_, i) => {
+      document.getElementById('dot'+i).classList.toggle('on', i === idx);
+    });
+    // Google Analytics — rastreia qual slide foi exibido
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'slide_view', {
+        slide_index: idx + 1,
+        slide_name: SLIDE_NAMES[idx],
+        event_category: 'Vitrine Lançamento'
+      });
+      // Slide 4 = QR de contato — rastreia como impressão do QR
+      if (idx === 3) {
+        gtag('event', 'qr_impression', {
+          event_category: 'Contato',
+          event_label: 'QR WhatsApp Lançamento'
+        });
+      }
+    }
+    // Progress bar
+    clearInterval(barTimer);
+    const bar = document.getElementById('pgbar');
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    const dur = DURATIONS[idx] * 1000;
+    startTime = Date.now();
+    barTimer = setInterval(() => {
+      const pct = Math.min(100, (Date.now() - startTime) / dur * 100);
+      bar.style.transition = 'width 0.1s linear';
+      bar.style.width = pct + '%';
+      if (pct >= 100) clearInterval(barTimer);
+    }, 100);
+  }
+
+  function nextSlide() {
+    current = (current + 1) % SLIDES.length;
+    showSlide(current);
+  }
+
+  // Auto-advance
+  function scheduleNext() {
+    clearTimeout(animFrame);
+    animFrame = setTimeout(() => {
+      nextSlide();
+      scheduleNext();
+    }, DURATIONS[current] * 1000);
+  }
+
+  showSlide(0);
+  scheduleNext();
+
+  // Touch to advance
+  document.addEventListener('click', () => {
+    clearTimeout(animFrame);
+    nextSlide();
+    scheduleNext();
+  });
+
+  // Fullscreen on click
+  document.addEventListener('dblclick', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    }
+  });
+
+  // Keep screen on (where supported)
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(() => {});
+  }
+</script>
+</body>
+</html>

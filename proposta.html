@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Proposta — SmartView Tech</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f7;color:#1e2230;}
+
+/* TOOLBAR */
+#bar{
+  position:sticky;top:0;z-index:99;
+  background:#1a1a2e;
+  display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;
+}
+#bar label{color:#8899bb;font-size:13px;white-space:nowrap;}
+#plan-sel{
+  flex:1;min-width:200px;
+  background:#0f3460;color:#fff;border:none;
+  border-radius:7px;padding:9px 12px;font-size:13px;cursor:pointer;
+}
+.btn{
+  border:none;border-radius:7px;padding:9px 16px;font-size:13px;
+  font-weight:700;cursor:pointer;white-space:nowrap;color:#fff;
+}
+.btn-pdf{background:#16a34a;}
+.btn-clr{background:#374151;}
+
+/* HINT */
+#hint{
+  background:#fff3cd;color:#7a5500;
+  font-size:13px;padding:10px 16px;text-align:center;
+  border-bottom:1px solid #f0c040;
+}
+
+/* PAGE */
+#page{
+  max-width:800px;margin:18px auto 40px;
+  background:#fff;border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,.12);overflow:hidden;
+}
+
+/* HEADER */
+.hdr{
+  background:linear-gradient(135deg,#1a1a2e,#0f3460);
+  color:#fff;padding:28px 32px 22px;
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+}
+.hdr-left h2{font-size:22px;font-weight:800;letter-spacing:1px;}
+.hdr-left h2 span{color:#e94560;}
+.hdr-left .tag{color:#8899bb;font-size:12px;margin-top:2px;}
+.hdr-right{text-align:right;font-size:13px;color:#8899bb;line-height:2;}
+.hdr-right strong{color:#fff;font-size:14px;}
+
+/* BADGE */
+#badge{
+  text-align:center;padding:12px 20px;
+  font-size:15px;font-weight:700;
+}
+
+/* SECTION */
+.sec{padding:22px 32px;border-bottom:1px solid #e8edf5;}
+.sec:last-child{border-bottom:none;}
+.stitle{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1.5px;color:#9aabb8;margin-bottom:14px;
+}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* CARD */
+.card{
+  border:1px solid #dde3ec;border-radius:8px;padding:14px 15px;
+  background:#f8f9fb;
+}
+.card-title{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:#9aa;margin-bottom:10px;
+}
+
+/* FIELD */
+.f{margin-bottom:8px;}
+.f label{display:block;font-size:11px;color:#9aa;margin-bottom:3px;}
+.fe{
+  width:100%;border:1.5px solid #c8d4e8;border-radius:6px;
+  padding:7px 9px;font-size:13px;color:#1e2230;background:#fff;
+  font-family:inherit;outline:none;transition:border-color .2s;
+}
+.fe:focus{border-color:#0f3460;}
+.fe.big{min-height:70px;resize:vertical;}
+
+/* PLAN DETAIL EDITABLES */
+#plan-wrap{
+  border:1px solid #dde3ec;border-radius:8px;padding:16px 18px;
+  background:#f8f9fb;
+}
+#plan-wrap .ptitle{
+  font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px;
+  border:none;background:transparent;width:100%;font-family:inherit;
+  outline:none;
+}
+#plan-wrap .ptitle:focus{background:#fff;border-bottom:2px solid #0f3460;}
+#plan-wrap .psub{
+  font-size:13px;color:#6b7280;margin-bottom:12px;
+  border:none;background:transparent;width:100%;font-family:inherit;
+  outline:none;
+}
+#plan-wrap .psub:focus{background:#fff;border-bottom:1px solid #ccc;}
+
+#items-list{margin-bottom:14px;}
+.item-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.item-row .icon{font-size:14px;flex-shrink:0;}
+.item-row input{
+  flex:1;border:none;border-bottom:1px dashed transparent;
+  background:transparent;font-size:13px;color:#1e2230;
+  padding:3px 0;font-family:inherit;outline:none;
+}
+.item-row input:focus{border-bottom-color:#ccc;background:#f0f5ff;}
+.item-row .rm{
+  background:none;border:none;color:#ccc;font-size:16px;
+  cursor:pointer;padding:0 3px;line-height:1;
+}
+.item-row .rm:hover{color:#e94560;}
+#add-item{
+  background:none;border:1px dashed #ccc;border-radius:5px;
+  color:#9aa;font-size:12px;padding:4px 10px;cursor:pointer;
+  margin-bottom:10px;
+}
+#add-item:hover{border-color:#0f3460;color:#0f3460;}
+
+/* PRICE BOX */
+.pbox{
+  display:flex;align-items:center;gap:12px;
+  border-radius:9px;padding:13px 16px;color:#fff;
+  background:linear-gradient(135deg,#1a1a2e,#0f3460);
+}
+.pbox .amt{font-size:28px;font-weight:800;line-height:1;}
+.pbox .pdesc{font-size:12px;color:#99c;line-height:1.6;}
+.pbox input{
+  background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,.3);
+  color:inherit;font-size:inherit;font-family:inherit;outline:none;
+}
+.pbox .amt input{font-size:28px;font-weight:800;width:120px;}
+.pbox .pdesc input{font-size:12px;color:#aac;width:200px;}
+
+/* CONDITIONS */
+#cond-text{
+  width:100%;min-height:120px;border:1.5px solid #c8d4e8;border-radius:7px;
+  padding:10px 12px;font-size:13px;color:#1e2230;line-height:1.7;
+  font-family:inherit;outline:none;resize:vertical;background:#fff;
+}
+#cond-text:focus{border-color:#0f3460;}
+
+/* VALIDITY ROW */
+.vrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.vitem{
+  background:#f8f9fb;border:1px solid #e5eaf3;
+  border-radius:7px;padding:8px 12px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.vitem span{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#9aa;}
+.vitem input{
+  border:none;background:transparent;font-size:13px;
+  font-weight:600;color:#1a1a2e;font-family:inherit;outline:none;width:130px;
+}
+.vitem input:focus{background:#f0f5ff;border-radius:3px;padding:1px 3px;}
+
+/* SIGNATURE */
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.sig-box{text-align:center;}
+.sig-box>p{font-size:12px;color:#9aa;margin-bottom:6px;}
+.sig-static{
+  height:90px;border:1.5px dashed #bcc;border-radius:8px;
+  background:#fff;display:flex;align-items:center;justify-content:center;
+}
+.sig-static span{font-size:12px;color:#ccc;}
+.sig-wrap{border:1.5px solid #bcc;border-radius:8px;overflow:hidden;position:relative;}
+#sig-canvas{display:block;background:#fff;cursor:crosshair;touch-action:none;width:100%;height:90px;}
+.sig-clr-btn{
+  position:absolute;top:4px;right:6px;
+  background:rgba(255,255,255,.9);border:1px solid #ccc;
+  border-radius:5px;font-size:11px;padding:2px 7px;cursor:pointer;color:#666;
+}
+.sig-line{border-top:1.5px solid #d0d8e8;margin:7px 16px 0;}
+.sig-lbl{font-size:12px;color:#9aa;margin-top:4px;}
+
+/* FOOTER */
+.ftr{
+  background:#1a1a2e;color:#6677aa;
+  padding:14px 32px;font-size:12px;text-align:center;line-height:1.7;
+}
+.ftr strong{color:#99aacc;}
+
+/* PRINT */
+@media print{
+  #bar,#hint{display:none!important;}
+  body{background:#fff;}
+  #page{margin:0;border-radius:0;box-shadow:none;max-width:100%;}
+  .fe,.fe.big,#cond-text,.vitem input,.item-row input,
+  #plan-wrap .ptitle,#plan-wrap .psub,.pbox input{
+    border:none!important;background:transparent!important;
+    padding-left:0!important;resize:none;
+  }
+  .sig-clr-btn,#add-item,.rm{display:none!important;}
+  .item-row input:focus,.fe:focus,#cond-text:focus{background:transparent!important;}
+}
+
+@media(max-width:600px){
+  .grid2,.sig-grid{grid-template-columns:1fr;}
+  .hdr{flex-direction:column;}
+  .hdr-right{text-align:left;}
+  .sec{padding:16px 14px;}
+  .hdr{padding:20px 14px 16px;}
+  .ftr{padding:12px 14px;}
+}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <label>Plano:</label>
+  <select id="plan-sel" onchange="loadPlan(this.value)">
+    <option value="A">Parceria — Cliente cede TV e espaço (1 ano grátis)</option>
+    <option value="B">Premium — SmartView instala tudo (R$59,90/mês)</option>
+    <option value="C">Premium Fundador — Só plataforma digital (R$59,90/mês)</option>
+    <option value="D">Free Fundador — Só portal, sem TV (1 ano grátis)</option>
+  </select>
+  <button class="btn btn-clr" onclick="clearSig()">Limpar assinatura</button>
+  <button class="btn btn-pdf" onclick="doPrint()">🖨️ Imprimir / PDF</button>
+</div>
+
+<div id="hint">💡 Todos os campos em branco são editáveis — clique para digitar. Plano e itens também podem ser alterados.</div>
+
+<div id="page">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <h2>Smart<span>View</span> Tech</h2>
+      <p class="tag">Tecnologia para comércios locais</p>
+      <p style="font-size:13px;color:#b0c0dd;margin-top:10px;line-height:1.8;">
+        CNPJ: <strong style="color:#fff">65.134.400/0001-35</strong><br>
+        comercial@smartviewtech.com.br<br>
+        www.smartviewtech.com.br · (11) 92496-2727
+      </p>
+    </div>
+    <div class="hdr-right">
+      <strong>PROPOSTA COMERCIAL</strong><br>
+      Data: <strong id="hdate"></strong><br>
+      Válida até: <strong id="hvalid"></strong>
+    </div>
+  </div>
+
+  <!-- BADGE -->
+  <div id="badge"></div>
+
+  <!-- PARTES -->
+  <div class="sec">
+    <div class="stitle">Partes Envolvidas</div>
+    <div class="grid2">
+
+      <!-- CONTRATADA -->
+      <div class="card">
+        <div class="card-title">Contratada</div>
+        <div class="f"><label>Razão Social</label>
+          <input class="fe" value="GFS Telecom / SmartView Tech"/></div>
+        <div class="f"><label>CNPJ</label>
+          <input class="fe" value="65.134.400/0001-35"/></div>
+        <div class="f"><label>E-mail</label>
+          <input class="fe" value="comercial@smartviewtech.com.br"/></div>
+        <div class="f"><label>WhatsApp</label>
+          <input class="fe" value="(11) 92496-2727"/></div>
+        <div class="f"><label>Representante</label>
+          <input class="fe" value="Gustavo Filipe — Diretor Comercial"/></div>
+      </div>
+
+      <!-- CONTRATANTE -->
+      <div class="card" style="border-color:#0f3460;background:#f0f5ff;">
+        <div class="card-title" style="color:#0f3460;">✏️ Contratante — preencha aqui</div>
+        <div class="f"><label>Nome / Razão Social</label>
+          <input class="fe" id="cl-name" placeholder="Nome do estabelecimento"/></div>
+        <div class="f"><label>CPF / CNPJ</label>
+          <input class="fe" placeholder="000.000.000-00 ou 00.000.000/0001-00"/></div>
+        <div class="f"><label>Responsável</label>
+          <input class="fe" id="cl-resp" placeholder="Nome do responsável"/></div>
+        <div class="f"><label>WhatsApp / Telefone</label>
+          <input class="fe" placeholder="(11) 9xxxx-xxxx"/></div>
+        <div class="f"><label>Endereço</label>
+          <input class="fe" placeholder="Rua, número — bairro"/></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PLANO -->
+  <div class="sec">
+    <div class="stitle">Detalhes do Plano</div>
+    <div id="plan-wrap">
+      <input class="ptitle" id="p-title" placeholder="Título do plano"/>
+      <input class="psub"   id="p-sub"   placeholder="Subtítulo / descrição breve"/>
+      <div id="items-list"></div>
+      <button id="add-item" onclick="addItem('','')">+ Adicionar item</button>
+      <div class="pbox" id="pbox">
+        <div class="amt"><input id="p-price" value="R$59,90" style="width:110px"/></div>
+        <div class="pdesc"><input id="p-desc" placeholder="descrição do preço"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONDIÇÕES -->
+  <div class="sec">
+    <div class="stitle">Condições Gerais</div>
+    <textarea id="cond-text" placeholder="Digite as condições da proposta..."></textarea>
+    <div class="vrow">
+      <div class="vitem"><span>Início</span><input id="v-start" value="08/05/2025"/></div>
+      <div class="vitem"><span>Fidelidade</span><input id="v-fidel" value="12 meses"/></div>
+      <div class="vitem"><span>Recorrência</span><input id="v-recur" value="Mensal (Pix)"/></div>
+      <div class="vitem"><span>Proposta válida até</span><input id="v-valid"/></div>
+    </div>
+  </div>
+
+  <!-- ASSINATURAS -->
+  <div class="sec">
+    <div class="stitle">Assinaturas</div>
+    <div class="sig-grid">
+
+      <div class="sig-box">
+        <p>Contratada — SmartView Tech</p>
+        <div class="sig-static"><span>Assinatura / carimbo</span></div>
+        <div class="sig-line"></div>
+        <div class="sig-lbl">Gustavo Filipe — Diretor Comercial</div>
+      </div>
+
+      <div class="sig-box">
+        <p>Contratante — <span id="sig-name">Cliente</span></p>
+        <div class="sig-wrap">
+          <canvas id="sig-canvas"></canvas>
+          <button class="sig-clr-btn" onclick="clearSig()">✕ Limpar</button>
+        </div>
+        <div class="sig-line"></div>
+        <div class="sig-lbl" id="sig-lbl">Assine acima com o dedo</div>
+      </div>
+
+    </div>
+    <p style="font-size:12px;color:#9aa;margin-top:14px;text-align:center;">
+      Ao assinar, o contratante declara ter lido e concordado com os termos desta proposta.
+    </p>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <strong>SmartView Tech</strong> · GFS Telecom · CNPJ 65.134.400/0001-35<br>
+    comercial@smartviewtech.com.br · (11) 92496-2727 · www.smartviewtech.com.br
+  </div>
+
+</div><!-- /#page -->
+
+<script>
+// ── PLANOS ──────────────────────────────────────────────────────────
+var PLANS = {
+  A:{
+    badge:'🤝 Plano Parceria — SmartView Vitrine Grátis por 1 Ano',
+    badgeBg:'linear-gradient(90deg,#1a6f3c,#22c55e,#1a6f3c)',badgeColor:'#fff',
+    title:'Plano Parceria — Vitrine Digital Grátis por 1 Ano',
+    sub:'O cliente cede a TV e o espaço — a SmartView instala e conecta tudo sem custo',
+    items:[
+      {icon:'✓',text:'Cliente disponibiliza a TV e o espaço de instalação'},
+      {icon:'✓',text:'SmartView fornece o dispositivo de conexão (Fire Stick) gratuitamente'},
+      {icon:'✓',text:'SmartView instala e configura tudo remotamente'},
+      {icon:'✓',text:'Vitrine digital rodando no estabelecimento com lojas parceiras do bairro'},
+      {icon:'✓',text:'Perfil completo da loja no portal SmartViewTech.com.br'},
+      {icon:'✓',text:'QR Code exclusivo e galeria de fotos e promoções'},
+      {icon:'✓',text:'1 ano completo sem nenhum custo para o cliente'},
+      {icon:'✓',text:'Após 1 ano: opção de continuar no Plano Premium com preço especial'},
+    ],
+    price:'R$0,00',pdesc:'/mês por 12 meses\nGratuito — Promo Parceria\nCliente cede TV e espaço',
+    pbox:'linear-gradient(135deg,#064e3b,#059669)',
+    cond:'• O cliente disponibiliza uma TV com entrada HDMI e local adequado para instalação.\n• A SmartView fornece o dispositivo (Fire Stick ou similar) sem custo, em comodato — permanece propriedade da SmartView.\n• A SmartView realiza a instalação, configuração e manutenção remota sem custo adicional.\n• O cliente deve garantir Wi-Fi funcionando no local.\n• Equipamento deve ser devolvido em bom estado ao encerramento do contrato.\n• Após 12 meses: transição opcional para o Plano Premium (R$59,90/mês).\n• Sem fidelidade obrigatória após o período gratuito.',
+    fidel:'Sem fidelidade',recur:'Gratuito',
+  },
+  B:{
+    badge:'📺 Plano Premium — SmartView instala TV e equipamento completo',
+    badgeBg:'linear-gradient(90deg,#4338ca,#6366f1,#4338ca)',badgeColor:'#fff',
+    title:'Plano Premium — SmartView Instala Tudo',
+    sub:'A SmartView fornece e instala a TV + dispositivo — cliente paga apenas a mensalidade',
+    items:[
+      {icon:'✓',text:'SmartView fornece e instala a TV no estabelecimento (em comodato)'},
+      {icon:'✓',text:'SmartView fornece o dispositivo de conexão (Fire Stick) em comodato'},
+      {icon:'✓',text:'Instalação, configuração e manutenção completa pela SmartView'},
+      {icon:'✓',text:'Vitrine digital exclusiva rodando na TV do cliente'},
+      {icon:'✓',text:'Perfil completo da loja no portal SmartViewTech.com.br'},
+      {icon:'✓',text:'QR Code exclusivo, galeria de fotos, promoções e cupom de desconto'},
+      {icon:'✓',text:'Estatísticas: visualizações, cliques e scans de QR Code'},
+      {icon:'✓',text:'Suporte técnico via WhatsApp incluso'},
+    ],
+    price:'R$59,90',pdesc:'/mês · recorrente\nTV + dispositivo em comodato\nInstalação incluída',
+    pbox:'linear-gradient(135deg,#4338ca,#6366f1)',
+    cond:'• A SmartView fornece a TV e o dispositivo (Fire Stick) em comodato — ambos permanecem propriedade da SmartView.\n• Instalação e manutenção realizadas pela SmartView sem custo adicional.\n• O cliente deve garantir energia elétrica e Wi-Fi no local.\n• Em caso de cancelamento, TV e dispositivo devem ser devolvidos em bom estado.\n• Danos ou extravio do equipamento: responsabilidade do contratante.\n• Pagamento: R$59,90/mês via Pix (QR gerado mensalmente).\n• Fidelidade: 12 meses. Cancelamento após o período com 30 dias de aviso.\n• Após 12 meses: preço pode ser reajustado (não superior a R$99,90/mês).',
+    fidel:'12 meses',recur:'Mensal (Pix)',
+  },
+  C:{
+    badge:'🚀 Plano Premium Fundador — Plataforma Digital com Preço Travado',
+    badgeBg:'linear-gradient(90deg,#b8860b,#f0a500,#b8860b)',badgeColor:'#1a1a00',
+    title:'Plano Premium Fundador — Plataforma Digital',
+    sub:'Presença no portal e vitrine digital — preço travado por 12 meses',
+    items:[
+      {icon:'✓',text:'Perfil completo da loja no portal SmartViewTech.com.br'},
+      {icon:'✓',text:'Aparição em rotação na vitrine digital (TVs dos estabelecimentos parceiros do bairro)'},
+      {icon:'✓',text:'Galeria de fotos — Cardápio, Produtos e Promoções'},
+      {icon:'✓',text:'QR Code exclusivo direcionando clientes ao perfil da loja'},
+      {icon:'✓',text:'Cupom de desconto configurável para clientes'},
+      {icon:'✓',text:'Estatísticas: visualizações, cliques e scans de QR Code'},
+      {icon:'✓',text:'Botão WhatsApp integrado — clientes falam direto com a loja'},
+      {icon:'✓',text:'Preço travado em R$59,90/mês por 12 meses (sem reajuste)'},
+    ],
+    price:'R$59,90',pdesc:'/mês · recorrente\nPreço travado 12 meses\nLançamento 08/05/2025',
+    pbox:'linear-gradient(135deg,#78350f,#d97706)',
+    cond:'• Valor: R$59,90/mês cobrado mensalmente via Pix.\n• Preço travado em R$59,90 pelo período de 12 meses — sem reajuste.\n• Após 12 meses: preço pode ser reajustado (não superior a R$99,90/mês).\n• Fidelidade: 12 meses a contar da ativação.\n• Cancelamento: após o período de fidelidade, com 30 dias de aviso.\n• Ativação: 08/05/2025. 1º pagamento via QR Code Pix no ato da assinatura.\n• Plano não inclui fornecimento de TV física (aparece nas telas dos parceiros).',
+    fidel:'12 meses',recur:'Mensal (Pix)',
+  },
+  D:{
+    badge:'🎁 Plano Free Fundador — Portal Digital Grátis por 1 Ano',
+    badgeBg:'linear-gradient(90deg,#374151,#6b7280,#374151)',badgeColor:'#fff',
+    title:'Plano Free Fundador — Portal Digital Grátis',
+    sub:'Presença no portal digital do bairro sem nenhum custo pelo primeiro ano',
+    items:[
+      {icon:'✓',text:'Perfil completo da loja no portal SmartViewTech.com.br'},
+      {icon:'✓',text:'Galeria de fotos — Cardápio, Produtos e Promoções'},
+      {icon:'✓',text:'Botão WhatsApp integrado no perfil da loja'},
+      {icon:'✓',text:'Cupom de desconto configurável para clientes'},
+      {icon:'✓',text:'QR Code exclusivo para o perfil da loja'},
+      {icon:'✓',text:'12 meses completamente gratuitos — Promo Fundador'},
+      {icon:'✓',text:'Após 1 ano: opção de manter Free ou fazer upgrade para Premium'},
+      {icon:'✗',text:'Vitrine de TV não inclusa (exclusivo do Plano Premium)'},
+    ],
+    price:'R$0,00',pdesc:'/mês por 12 meses\nGratuito — Promo Fundador\nCadastro até 08/05/2025',
+    pbox:'linear-gradient(135deg,#064e3b,#059669)',
+    cond:'• Custo: gratuito pelos primeiros 12 meses a partir da ativação.\n• Vitrine de TV não inclusa — disponível mediante upgrade para Plano Premium.\n• Após 12 meses: plano Free permanece gratuito (funcionalidades básicas).\n• Sem fidelidade obrigatória.\n• Ativação prevista para 08/05/2025 — confirmação via WhatsApp.',
+    fidel:'Sem fidelidade',recur:'Gratuito',
+  },
+};
+
+// ── HELPERS ──────────────────────────────────────────────────────────
+function pad(n){return n<10?'0'+n:''+n;}
+function fmt(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();}
+
+// ── LOAD PLAN ────────────────────────────────────────────────────────
+function loadPlan(key){
+  var p=PLANS[key]; if(!p) return;
+
+  // badge
+  var b=document.getElementById('badge');
+  b.textContent=p.badge;
+  b.style.cssText='text-align:center;padding:12px 20px;font-size:15px;font-weight:700;'+
+    'background:'+p.badgeBg+';color:'+p.badgeColor+';';
+
+  // title / sub
+  document.getElementById('p-title').value=p.title;
+  document.getElementById('p-sub').value=p.sub;
+
+  // items
+  var list=document.getElementById('items-list');
+  list.innerHTML='';
+  p.items.forEach(function(it){addItem(it.icon,it.text);});
+
+  // price box
+  document.getElementById('pbox').style.background=p.pbox;
+  document.getElementById('p-price').value=p.price;
+  document.getElementById('p-desc').value=p.pdesc.replace(/\n/g,' · ');
+
+  // conditions
+  document.getElementById('cond-text').value=p.cond;
+
+  // validity fields
+  document.getElementById('v-fidel').value=p.fidel;
+  document.getElementById('v-recur').value=p.recur;
+}
+
+// ── ITEMS ─────────────────────────────────────────────────────────────
+function addItem(icon,text){
+  var row=document.createElement('div');
+  row.className='item-row';
+  row.innerHTML=
+    '<span class="icon">'+(icon||'✓')+'</span>'+
+    '<input value="'+text+'" placeholder="Descreva o item incluso"/>'+
+    '<button class="rm" onclick="this.parentElement.remove()">×</button>';
+  document.getElementById('items-list').appendChild(row);
+}
+
+// ── SIGNATURE ────────────────────────────────────────────────────────
+var canvas,ctx,drawing=false;
+
+function initSig(){
+  canvas=document.getElementById('sig-canvas');
+  var pw=canvas.parentElement.offsetWidth||340;
+  canvas.width=pw*2;
+  canvas.height=180;
+  canvas.style.height='90px';
+  ctx=canvas.getContext('2d');
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#1a1a2e';
+  ctx.lineWidth=3;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
+  ctx.scale(2,2);
+
+  function getXY(e){
+    var r=canvas.getBoundingClientRect();
+    var src=e.touches?e.touches[0]:e;
+    return{
+      x:(src.clientX-r.left)*(canvas.width/(r.width*2)),
+      y:(src.clientY-r.top)*(canvas.height/(r.height*2))
+    };
+  }
+  function dn(e){e.preventDefault();drawing=true;var p=getXY(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}
+  function mv(e){if(!drawing)return;e.preventDefault();var p=getXY(e);ctx.lineTo(p.x,p.y);ctx.stroke();}
+  function up(){drawing=false;}
+
+  canvas.addEventListener('mousedown',dn);
+  canvas.addEventListener('mousemove',mv);
+  canvas.addEventListener('mouseup',up);
+  canvas.addEventListener('mouseleave',up);
+  canvas.addEventListener('touchstart',dn,{passive:false});
+  canvas.addEventListener('touchmove',mv,{passive:false});
+  canvas.addEventListener('touchend',up);
+
+  // sync name
+  document.getElementById('cl-resp').addEventListener('input',function(){
+    var v=this.value.trim();
+    document.getElementById('sig-name').textContent=v||'Cliente';
+    document.getElementById('sig-lbl').textContent=v||'Assine acima com o dedo';
+  });
+}
+
+function clearSig(){
+  if(!ctx)return;
+  ctx.save();
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.restore();
+}
+
+// ── PRINT ─────────────────────────────────────────────────────────────
+function doPrint(){
+  window.print();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+window.addEventListener('load',function(){
+  var today=new Date();
+  var valid=new Date();valid.setDate(valid.getDate()+7);
+  document.getElementById('hdate').textContent=fmt(today);
+  document.getElementById('hvalid').textContent=fmt(valid);
+  document.getElementById('v-valid').value=fmt(valid);
+  loadPlan('A');
+  initSig();
+});
+</script>
+</body>
+</html>
