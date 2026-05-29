@@ -500,11 +500,11 @@ var P=[
 var VIDEO_FEIJAO='/feijao.mp4';
 var VIDEO_BT='/bt.mp4';
 var VIDEO_ADEGA='/adegabaronesa.mp4';
-function norm(raw,i){ var pr=raw.promotion||{}; var sid=raw.id||raw.store_id||raw.slug||''; var qr=raw.link_qrcode||(sid?PORTAL+'/loja/'+sid+'?src=vitrine':PORTAL); var nm=raw.name||''; var nml=nm.toLowerCase(); var video=raw.video_vitrine||raw.video_url||''; if(nml.indexOf('feij')>=0) video=VIDEO_FEIJAO; if(nml.indexOf('bt')>=0||nml.indexOf('boutique')>=0) video=VIDEO_BT; if(nml.indexOf('baronesa')>=0) video=VIDEO_ADEGA; return {name:nm,description:raw.description||'',category:raw.category||'outros',address:raw.address||'',phone:raw.phone||'',whatsapp:raw.whatsapp||'',logo:raw.logo||'',bg:raw.photo_vitrine||'',qr:qr,video:video,promotions:pr.exists&&pr.phrase?[{title:pr.phrase}]:[],coupon:null}; }
+function norm(raw,i){ var pr=raw.promotion||{}; var sid=raw.id||raw.uid||raw.store_id||raw.storeId||raw.slug||''; var qr=raw.link_qrcode||(sid?PORTAL+'/loja/'+sid+'?src=vitrine':PORTAL); var nm=raw.name||''; var nml=nm.toLowerCase(); var video=raw.video_vitrine||raw.video_url||''; if(nml.indexOf('feij')>=0) video=VIDEO_FEIJAO; if(nml.indexOf('bt')>=0||nml.indexOf('boutique')>=0) video=VIDEO_BT; if(nml.indexOf('baronesa')>=0) video=VIDEO_ADEGA; return {name:nm,description:raw.description||'',category:raw.category||'outros',address:raw.address||'',phone:raw.phone||'',whatsapp:raw.whatsapp||'',logo:raw.logo||'',bg:raw.photo_vitrine||'',qr:qr,video:video,promotions:pr.exists&&pr.phrase?[{title:pr.phrase}]:[],coupon:null}; }
 
 // ── API ──
 function apiLoad(){ return fetch(API_BASE+'/api/v1/vitrine?code='+CODE,{headers:{'Authorization':'Bearer '+CODE,'Accept':'application/json'}}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }); }
-var CK='sv_p_'+(CODE||'x');
+var CK='sv_p2_'+(CODE||'x'); // v2: cache com store IDs
 function saveC(d){ try{localStorage.setItem(CK,JSON.stringify(d));}catch(e){} }
 function loadC(){ try{var d=localStorage.getItem(CK);return d?JSON.parse(d):null;}catch(e){return null;} }
 function preload(list){ list.forEach(function(s){ if(s.photo_vitrine) new Image().src=s.photo_vitrine; if(s.logo) new Image().src=s.logo; }); }
